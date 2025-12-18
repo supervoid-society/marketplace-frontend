@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
 function EditUser({ token }) {
   const { id } = useParams();

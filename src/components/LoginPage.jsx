@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
 function LoginPage() {
   const { isDark } = useTheme();

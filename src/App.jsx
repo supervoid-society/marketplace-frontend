@@ -13,8 +13,8 @@ import EditUser from "./components/EditUser";
 import Cart from "./components/Cart";
 import { useTheme } from "./contexts/ThemeContext";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL;
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
 
 function App() {
   const { isDark, toggleTheme } = useTheme();

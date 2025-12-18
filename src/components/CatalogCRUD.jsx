@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL;
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
 
 function CatalogCRUD({ token, syncCartWithCatalog }) {
   const navigate = useNavigate();
