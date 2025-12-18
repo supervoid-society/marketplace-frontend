@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
-const CRUD_URL = import.meta.env.CRUD_SERVICE_URL;
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL;
 
 function AddCatalogItem({ token }) {
   const navigate = useNavigate();

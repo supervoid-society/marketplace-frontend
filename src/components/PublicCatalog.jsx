@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 
-const CRUD_URL = import.meta.env.CRUD_SERVICE_URL;
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL;
 
 function PublicCatalog({ cart, addToCart, images, setImages }) {
   const { isDark } = useTheme();

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import jsPDF from "jspdf";
 
-const CRUD_URL = import.meta.env.CRUD_SERVICE_URL;
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL;
 
 function Cart({ cart, setCart, images }) {
   const { isDark } = useTheme();
