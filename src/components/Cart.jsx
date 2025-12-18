@@ -56,7 +56,7 @@ function Cart({ cart, setCart, images }) {
     
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text("Ahmeng Marketplace", 105, 30, { align: "center" });
+    doc.text("Ahmeng Marketplace.", 105, 30, { align: "center" });
     doc.text("Tanggal: " + new Date().toLocaleDateString("id-ID"), 105, 40, { align: "center" });
     
     let y = 60;

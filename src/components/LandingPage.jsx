@@ -11,7 +11,7 @@ function LandingPage() {
         <div className={`absolute inset-0 ${isDark ? 'bg-black opacity-30' : ''}`}></div>
         <div className={`relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center ${isDark ? 'text-white' : 'text-black'}`}>
           <h1 className={`text-5xl md:text-7xl font-bold mb-6 animate-fade-in ${isDark ? 'text-white' : 'text-black'}`}>
-            Ahmeng Marketplace
+            Ahmeng Marketplace.
           </h1>
           <p className={`text-xl md:text-2xl mb-8 max-w-2xl animate-fade-in-delay ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
             Temukan produk terbaik dengan harga terjangkau. Belanja mudah, cepat, dan aman.

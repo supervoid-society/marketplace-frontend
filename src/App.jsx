@@ -99,7 +99,7 @@ function App() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <Link to="/" className={`text-2xl font-bold transition-all duration-200 ${isDark ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-700'}`}>
-                Ahmeng Marketplace
+                Ahmeng Marketplace.
               </Link>
               <div className="hidden md:flex items-center space-x-8">
                 <Link to="/catalog" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
