@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+.animate-fade-in-delay {
+  animation: fadeIn 1s ease-out 0.5s both;
+}
+
+.animate-fade-in-delay-2 {
+  animation: fadeIn 1s ease-out 1s both;
+}
+
+@theme {
+  --color-dark-bg: #0f0f0f;
+  --color-dark-surface: #1a1a1a;
+  --color-dark-text: #ffffff;
+  --color-dark-text-secondary: #a0a0a0;
+}
+
+/* Dark mode styles */
+.dark {
+  color-scheme: dark;
+}
