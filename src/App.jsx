@@ -13,8 +13,8 @@ import EditUser from "./components/EditUser";
 import Cart from "./components/Cart";
 import { useTheme } from "./contexts/ThemeContext";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL;
+const AUTH_URL = import.meta.env.AUTH_SERVICE_URL;
+const CRUD_URL = import.meta.env.CRUD_SERVICE_URL;
 
 function App() {
   const { isDark, toggleTheme } = useTheme();

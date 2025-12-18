@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
+const AUTH_URL = import.meta.env.AUTH_SERVICE_URL;
 
 function AddUser({ token }) {
   const navigate = useNavigate();
