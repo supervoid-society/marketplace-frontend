@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
 const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
@@ -69,17 +70,19 @@ function PublicCatalog({ cart, addToCart, images, setImages }) {
                   <div className={`absolute inset-0 ${isDark ? 'bg-black/20' : 'bg-black/20'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
                 </div>
               )}
-              <h2 className={`text-xl font-bold mb-2 group-hover:text-gray-400 transition-colors duration-200 ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.name}</h2>
+              <h2 className={`text-xl font-bold mb-2 transition-colors duration-200 ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.name}</h2>
               <p className={`mb-4 line-clamp-2 text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{item.description}</p>
               <div className="mb-4">
                 <p className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatRupiah(item.price)}</p>
               </div>
-              <button
-                onClick={() => addToCart(item)}
-                className={`w-full py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg font-medium ${isDark ? 'bg-gray-600 text-white hover:bg-gray-500' : 'bg-gray-800 text-white hover:bg-gray-900'}`}
-              >
-                Tambah ke Keranjang
-              </button>
+              <div className="flex gap-2 mb-4">
+                <Link
+                  to={`/catalog/${item.id}`}
+                  className={`flex-1 py-2 px-4 rounded-xl transition-all duration-200 text-center font-medium bg-black text-white hover:bg-gray-800`}
+                >
+                  Lihat Detail
+                </Link>
+              </div>
             </div>
           ))}
         </div>

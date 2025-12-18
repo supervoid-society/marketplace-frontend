@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import LandingPage from "./components/LandingPage";
 import LoginPage from "./components/LoginPage";
 import PublicCatalog from "./components/PublicCatalog";
+import CatalogDetail from "./components/CatalogDetail";
 import Dashboard from "./components/Dashboard";
 import CatalogCRUD from "./components/CatalogCRUD";
 import AddCatalogItem from "./components/AddCatalogItem";
@@ -62,11 +63,11 @@ function App() {
       if (existingItem) {
         return prevCart.map(cartItem =>
           cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            ? { ...cartItem, quantity: cartItem.quantity + (item.quantity || 1) }
             : cartItem
         );
       } else {
-        return [...prevCart, { ...item, quantity: 1 }];
+        return [...prevCart, { ...item, quantity: item.quantity || 1 }];
       }
     });
   };
@@ -253,6 +254,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/catalog" element={<PublicCatalog cart={cart} addToCart={addToCart} images={images} setImages={setImages} />} />
+          <Route path="/catalog/:id" element={<CatalogDetail cart={cart} addToCart={addToCart} images={images} setImages={setImages} />} />
           <Route path="/cart" element={<Cart cart={cart} setCart={setCart} images={images} />} />
           <Route path="/dashboard" element={token ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} />
           <Route path="/manage-catalog" element={token ? <div className="p-4 sm:p-6"><div className="max-w-7xl mx-auto"><CatalogCRUD token={token} syncCartWithCatalog={syncCartWithCatalog} /></div></div> : <Navigate to="/" />} />
