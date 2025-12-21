@@ -203,7 +203,7 @@ function MiningPage({ token }) {
             <h2 className="text-xl font-semibold mb-4">Current Task</h2>
             <div className="space-y-2">
               <p><strong>Challenge:</strong> {challenge}</p>
-              <p><strong>Difficulty:</strong> {difficulty} leading zeros</p>
+              <p><strong>Difficulty:</strong> {difficulty * 4} leading zero bits ({difficulty} hex digits)</p>
               <p><strong>Reward:</strong> {formatRupiah(100000)}</p>
             </div>
           </div>
