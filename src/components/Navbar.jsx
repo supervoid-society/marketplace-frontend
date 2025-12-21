@@ -4,6 +4,18 @@ import { useCart } from '../contexts/CartContext';
 
 const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMenuOpen, handleLogout }) => {
   const { cart } = useCart();
+
+  const formatBalance = (amount) => {
+    if (amount >= 1000000000000) {
+      return `Rp ${(amount / 1000000000000).toFixed(1)} triliun`;
+    } else if (amount >= 1000000000) {
+      return `Rp ${(amount / 1000000000).toFixed(1)} miliar`;
+    } else if (amount >= 1000000) {
+      return `Rp ${(amount / 1000000).toFixed(1)} juta`;
+    } else {
+      return `Rp ${amount.toLocaleString('id-ID')}`;
+    }
+  };
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'} shadow-lg`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -14,6 +26,10 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
 
           {/* Desktop Navbar */}
           <div className="hidden md:flex items-center space-x-8">
+            <Link to="/leaderboard" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
+              🏆 Leaderboard
+              <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+            </Link>
             <Link to="/catalog" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
               Katalog
               <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
@@ -67,12 +83,12 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
               </Link>
             )}
             {token && userRole !== 'admin' && (
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all duration-200 ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300' : 'bg-white border-gray-300 text-gray-700'}`}>
+              <Link to="/mining" className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all duration-200 cursor-pointer ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
                 </svg>
-                <span className="font-medium">Rp {balance.toLocaleString('id-ID')}</span>
-              </div>
+                <span className="font-medium">{formatBalance(balance)}</span>
+              </Link>
             )}
             <button
               onClick={toggleTheme}
@@ -135,6 +151,13 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
         {menuOpen && (
           <div className={`md:hidden px-2 pt-2 pb-3 space-y-2 backdrop-blur-md border-t shadow-lg transition-colors duration-300 ${isDark ? 'bg-black/95 border-gray-900' : 'bg-white/95 border-gray-200'}`}>
             <Link
+              to="/leaderboard"
+              className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              🏆 Leaderboard
+            </Link>
+            <Link
               to="/catalog"
               className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
               onClick={() => setMenuOpen(false)}
@@ -178,12 +201,16 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
               </Link>
             )}
             {token && userRole !== 'admin' && (
-              <div className={`flex items-center space-x-2 px-4 py-3 rounded-lg border transition-all duration-200 ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300' : 'bg-white border-gray-300 text-gray-700'}`}>
+              <Link
+                to="/mining"
+                className={`flex items-center space-x-2 px-4 py-3 rounded-lg border transition-all duration-200 ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
                 </svg>
-                <span className="font-medium">Rp {balance.toLocaleString('id-ID')}</span>
-              </div>
+                <span className="font-medium">{formatBalance(balance)}</span>
+              </Link>
             )}
             {token && (
               <button

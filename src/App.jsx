@@ -18,6 +18,8 @@ import Checkout from "./components/Checkout";
 import Settings from "./components/Settings";
 import TransactionHistory from "./components/TransactionHistory";
 import TransactionStats from "./components/TransactionStats";
+import MiningPage from "./components/MiningPage";
+import Leaderboard from "./components/Leaderboard";
 import Navbar from "./components/Navbar";
 import { useTheme } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
@@ -149,6 +151,8 @@ function App() {
             <Route path="/manage-users/:id" element={token && userRole === 'admin' ? <EditUser token={token} /> : <Navigate to="/" />} />
             <Route path="/settings" element={token ? <Settings token={token} userRole={userRole} /> : <Navigate to="/" />} />
             <Route path="/transaction-history" element={token && (userRole === 'buyer' || userRole === 'seller') ? <TransactionHistory /> : <Navigate to="/" />} />
+            <Route path="/mining" element={token && (userRole === 'buyer' || userRole === 'seller') ? <MiningPage token={token} /> : <Navigate to="/" />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
           </Routes>
         </div>
       </Router>
