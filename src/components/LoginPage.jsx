@@ -12,7 +12,7 @@ function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${AUTH_URL}/login`, {
+      const res = await fetch(`${AUTH_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginForm),
@@ -20,7 +20,7 @@ function LoginPage() {
       const data = await res.json();
       if (data.token) {
         localStorage.setItem("token", data.token);
-        navigate("/dashboard");
+        navigate("/catalog");
       } else {
         alert("Login failed");
       }
@@ -33,8 +33,8 @@ function LoginPage() {
     <div className={`min-h-screen flex items-center justify-center px-4 transition-all duration-200 ${isDark ? 'bg-black' : 'bg-white'}`}>
         <div className={`backdrop-blur-md p-8 rounded-3xl shadow-2xl max-w-md w-full border transition-all duration-200 ${isDark ? 'bg-black/80 border-gray-900' : 'bg-white/80 border-gray-200'}`}>
           <div className="text-center mb-6">
-            <h2 className={`text-3xl font-bold mb-2 transition-all duration-200 ${isDark ? 'text-white' : 'text-gray-800'}`}>Admin Login</h2>
-            <p className={`transition-all duration-200 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Masuk ke panel admin</p>
+            <h2 className={`text-3xl font-bold mb-2 transition-all duration-200 ${isDark ? 'text-white' : 'text-gray-800'}`}>Login</h2>
+            <p className={`transition-all duration-200 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Masuk ke akun Anda</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
@@ -74,7 +74,13 @@ function LoginPage() {
               Masuk
             </button>
           </form>
-          <div className="text-center mt-6">
+          <div className="text-center mt-6 space-y-2">
+            <p className={`text-sm transition-all duration-200 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Belum punya akun?{" "}
+              <Link to="/register-buyer" className={`font-medium hover:underline ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-800 hover:text-black'}`}>
+                Daftar sekarang
+              </Link>
+            </p>
             <Link to="/" className={`text-sm transition-all duration-200 ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'}`}>
               ← Kembali ke Beranda
             </Link>

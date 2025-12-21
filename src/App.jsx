@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-ro
 import { useState, useEffect } from "react";
 import LandingPage from "./components/LandingPage";
 import LoginPage from "./components/LoginPage";
+import RegisterBuyer from "./components/RegisterBuyer";
+import RegisterSeller from "./components/RegisterSeller";
 import PublicCatalog from "./components/PublicCatalog";
 import CatalogDetail from "./components/CatalogDetail";
 import Dashboard from "./components/Dashboard";
@@ -12,6 +14,7 @@ import UserCRUD from "./components/UserCRUD";
 import AddUser from "./components/AddUser";
 import EditUser from "./components/EditUser";
 import Cart from "./components/Cart";
+import Settings from "./components/Settings";
 import { useTheme } from "./contexts/ThemeContext";
 
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
@@ -20,10 +23,28 @@ const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788
 function App() {
   const { isDark, toggleTheme } = useTheme();
   const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [userRole, setUserRole] = useState("");
+
+  // Function to decode JWT token and get user role
+  const getUserRole = (token) => {
+    if (!token) return "";
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role || "";
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return "";
+    }
+  };
 
   useEffect(() => {
+    // Initialize user role on first load
+    setUserRole(getUserRole(token));
+    
     const handleStorageChange = () => {
-      setToken(localStorage.getItem("token") || "");
+      const currentToken = localStorage.getItem("token") || "";
+      setToken(currentToken);
+      setUserRole(getUserRole(currentToken));
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -33,6 +54,7 @@ function App() {
       const currentToken = localStorage.getItem("token") || "";
       if (currentToken !== token) {
         setToken(currentToken);
+        setUserRole(getUserRole(currentToken));
       }
     }, 100);
 
@@ -58,6 +80,10 @@ function App() {
   };
 
   const addToCart = (item) => {
+    if (userRole !== 'buyer') {
+      alert('Hanya pembeli yang dapat menambahkan item ke keranjang. Silakan login sebagai pembeli.');
+      return;
+    }
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
       if (existingItem) {
@@ -107,41 +133,53 @@ function App() {
                   Katalog
                   <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
                 </Link>
-                <Link to="/cart" className={`relative font-medium group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
-                  <span className="flex items-center">
-                    Keranjang
-                    {cart.length > 0 && (
-                      <span className="ml-2 bg-gray-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg">
-                        {cart.length}
-                      </span>
-                    )}
-                  </span>
-                  <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
-                </Link>
-                {token && (
+                {userRole === 'buyer' && (
+                  <Link to="/cart" className={`relative font-medium group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
+                    <span className="flex items-center">
+                      Keranjang
+                      {cart.length > 0 && (
+                        <span className="ml-2 bg-gray-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg">
+                          {cart.length}
+                        </span>
+                      )}
+                    </span>
+                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+                  </Link>
+                )}
+                {token && (userRole === 'admin' || userRole === 'seller') && (
                   <>
                     <Link to="/manage-catalog" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
                       Manage Catalog
                       <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
                     </Link>
-                    <Link to="/manage-users" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
-                      Manage Users
-                      <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className={`text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
-                    >
-                      Logout
-                    </button>
                   </>
+                )}
+                {token && userRole === 'admin' && (
+                  <Link to="/manage-users" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
+                    Manage Users
+                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+                  </Link>
+                )}
+                {token && (
+                  <Link to="/settings" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
+                    Settings
+                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+                  </Link>
+                )}
+                {token && (
+                  <button
+                    onClick={handleLogout}
+                    className={`text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
+                  >
+                    Logout
+                  </button>
                 )}
                 {!token && (
                   <Link
                     to="/login"
                     className={`text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
                   >
-                    Admin Login
+                    Login
                   </Link>
                 )}
                 <button
@@ -199,21 +237,23 @@ function App() {
                 >
                   Katalog
                 </Link>
-                <Link
-                  to="/cart"
-                  className={`block px-4 py-3 transition-all duration-200 font-medium relative rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <span className="flex items-center justify-between">
-                    Keranjang
-                    {cart.length > 0 && (
-                      <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                        {cart.length}
-                      </span>
-                    )}
-                  </span>
-                </Link>
-                {token && (
+                {userRole === 'buyer' && (
+                  <Link
+                    to="/cart"
+                    className={`block px-4 py-3 transition-all duration-200 font-medium relative rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <span className="flex items-center justify-between">
+                      Keranjang
+                      {cart.length > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                          {cart.length}
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                )}
+                {token && (userRole === 'admin' || userRole === 'seller') && (
                   <>
                     <Link
                       to="/manage-catalog"
@@ -222,20 +262,33 @@ function App() {
                     >
                       Manage Catalog
                     </Link>
-                    <Link
-                      to="/manage-users"
-                      className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Manage Users
-                    </Link>
-                    <button
-                      onClick={() => { handleLogout(); setMenuOpen(false); }}
-                      className={`block w-full text-left px-4 py-3 text-white rounded-lg transition-all duration-200 font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
-                    >
-                      Logout
-                    </button>
                   </>
+                )}
+                {token && userRole === 'admin' && (
+                  <Link
+                    to="/manage-users"
+                    className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Manage Users
+                  </Link>
+                )}
+                {token && (
+                  <Link
+                    to="/settings"
+                    className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                )}
+                {token && (
+                  <button
+                    onClick={() => { handleLogout(); setMenuOpen(false); }}
+                    className={`block w-full text-left px-4 py-3 text-white rounded-lg transition-all duration-200 font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
+                  >
+                    Logout
+                  </button>
                 )}
                 {!token && (
                   <Link
@@ -243,7 +296,7 @@ function App() {
                     className={`block w-full text-left px-4 py-3 text-white rounded-lg transition-all duration-200 font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
                     onClick={() => setMenuOpen(false)}
                   >
-                    Admin Login
+                    Login
                   </Link>
                 )}
               </div>
@@ -253,16 +306,19 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register-buyer" element={<RegisterBuyer />} />
+          <Route path="/register-seller" element={<RegisterSeller />} />
           <Route path="/catalog" element={<PublicCatalog cart={cart} addToCart={addToCart} images={images} setImages={setImages} />} />
           <Route path="/catalog/:id" element={<CatalogDetail cart={cart} addToCart={addToCart} images={images} setImages={setImages} />} />
-          <Route path="/cart" element={<Cart cart={cart} setCart={setCart} images={images} />} />
-          <Route path="/dashboard" element={token ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} />
-          <Route path="/manage-catalog" element={token ? <div className="p-4 sm:p-6"><div className="max-w-7xl mx-auto"><CatalogCRUD token={token} syncCartWithCatalog={syncCartWithCatalog} /></div></div> : <Navigate to="/" />} />
-          <Route path="/manage-catalog/add" element={token ? <div className="p-4 sm:p-6"><AddCatalogItem token={token} /></div> : <Navigate to="/" />} />
-          <Route path="/manage-catalog/:id" element={token ? <div className="p-4 sm:p-6"><EditCatalogItem token={token} syncCartWithCatalog={syncCartWithCatalog} /></div> : <Navigate to="/" />} />
-          <Route path="/manage-users" element={token ? <div className="p-4 sm:p-6"><div className="max-w-7xl mx-auto"><UserCRUD token={token} /></div></div> : <Navigate to="/" />} />
-          <Route path="/manage-users/add" element={token ? <div className="p-4 sm:p-6"><AddUser token={token} /></div> : <Navigate to="/" />} />
-          <Route path="/manage-users/:id" element={token ? <div className="p-4 sm:p-6"><EditUser token={token} /></div> : <Navigate to="/" />} />
+          <Route path="/cart" element={userRole === 'buyer' ? <Cart cart={cart} setCart={setCart} images={images} /> : <Navigate to="/" />} />
+          <Route path="/dashboard" element={token && userRole === 'admin' ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} />
+          <Route path="/manage-catalog" element={token && (userRole === 'admin' || userRole === 'seller') ? <div className="p-4 sm:p-6"><div className="max-w-7xl mx-auto"><CatalogCRUD token={token} syncCartWithCatalog={syncCartWithCatalog} /></div></div> : <Navigate to="/" />} />
+          <Route path="/manage-catalog/add" element={token && (userRole === 'admin' || userRole === 'seller') ? <div className="p-4 sm:p-6"><AddCatalogItem token={token} /></div> : <Navigate to="/" />} />
+          <Route path="/manage-catalog/:id" element={token && (userRole === 'admin' || userRole === 'seller') ? <div className="p-4 sm:p-6"><EditCatalogItem token={token} syncCartWithCatalog={syncCartWithCatalog} /></div> : <Navigate to="/" />} />
+          <Route path="/manage-users" element={token && userRole === 'admin' ? <div className="p-4 sm:p-6"><div className="max-w-7xl mx-auto"><UserCRUD token={token} /></div></div> : <Navigate to="/" />} />
+          <Route path="/manage-users/add" element={token && userRole === 'admin' ? <div className="p-4 sm:p-6"><AddUser token={token} /></div> : <Navigate to="/" />} />
+          <Route path="/manage-users/:id" element={token && userRole === 'admin' ? <div className="p-4 sm:p-6"><EditUser token={token} /></div> : <Navigate to="/" />} />
+          <Route path="/settings" element={token ? <div className="p-4 sm:p-6"><Settings token={token} userRole={userRole} /></div> : <Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

@@ -20,7 +20,8 @@ function CatalogCRUD({ token, syncCartWithCatalog }) {
 
   const fetchCatalog = async () => {
     try {
-      const res = await fetch(`${CRUD_URL}/catalog-items`);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${CRUD_URL}/catalog-items`, { headers });
       const data = await res.json();
       setCatalog(data);
       for (const item of data) {
