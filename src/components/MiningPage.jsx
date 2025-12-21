@@ -43,6 +43,27 @@ function MiningPage({ token }) {
     }
   };
 
+  const startWorker = useCallback((challenge, difficulty) => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+    }
+    workerRef.current = new Worker(new URL('../workers/miner.js', import.meta.url), { type: 'module' });
+    workerRef.current.postMessage({ challenge, difficulty });
+
+    workerRef.current.onmessage = (e) => {
+      const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
+      if (type === 'found') {
+        setNonce(foundNonce);
+        submitTask(foundNonce);
+      } else if (type === 'progress') {
+        attemptsRef.current = workerAttempts;
+        setAttempts(workerAttempts);
+        const elapsed = (Date.now() - startTimeRef.current) / 1000;
+        setHashrate(Math.floor(workerAttempts / elapsed));
+      }
+    };
+  }, [submitTask]);
+
   const getTask = useCallback(async () => {
     try {
       const res = await fetch(`${AUTH_URL}/auth/task`, {
@@ -60,8 +81,8 @@ function MiningPage({ token }) {
         setHashrate(0);
         startTimeRef.current = Date.now();
         // Update worker with new challenge
-        if (workerRef.current) {
-          workerRef.current.postMessage({ challenge: data.challenge, difficulty });
+        if (isMining) {
+          startWorker(data.challenge, difficulty);
         }
       } else {
         setMessage(data.error || "Failed to get task");
@@ -69,7 +90,7 @@ function MiningPage({ token }) {
     } catch (error) {
       setMessage("Error fetching task");
     }
-  }, [token]);
+  }, [token, isMining, difficulty, startWorker]);
 
   const fetchSolvedHistory = async () => {
     try {
@@ -135,21 +156,7 @@ function MiningPage({ token }) {
     }, 5000);
 
     // Use Web Worker for mining
-    workerRef.current = new Worker(new URL('../workers/miner.js', import.meta.url), { type: 'module' });
-    workerRef.current.postMessage({ challenge, difficulty });
-
-    workerRef.current.onmessage = (e) => {
-      const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
-      if (type === 'found') {
-        setNonce(foundNonce);
-        submitTask(foundNonce);
-      } else if (type === 'progress') {
-        attemptsRef.current = workerAttempts;
-        setAttempts(workerAttempts);
-        const elapsed = (Date.now() - startTimeRef.current) / 1000;
-        setHashrate(Math.floor(workerAttempts / elapsed));
-      }
-    };
+    startWorker(challenge, difficulty);
   };
 
   const stopMining = () => {
@@ -218,13 +225,6 @@ function MiningPage({ token }) {
               </button>
             </div>
           </div>
-
-          {nonce && (
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">Found Nonce</h2>
-              <p className="font-mono bg-gray-100 p-2 rounded">{nonce}</p>
-            </div>
-          )}
 
           {message && (
             <div className={`p-4 rounded ${message.includes('solved') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
