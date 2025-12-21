@@ -43,26 +43,21 @@ function MiningPage({ token }) {
     }
   };
 
-  const startWorker = useCallback((challenge, difficulty) => {
-    if (workerRef.current) {
-      workerRef.current.terminate();
-    }
-    workerRef.current = new Worker(new URL('../workers/miner.js', import.meta.url), { type: 'module' });
-    workerRef.current.postMessage({ challenge, difficulty });
-
-    workerRef.current.onmessage = (e) => {
-      const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
-      if (type === 'found') {
-        setNonce(foundNonce);
-        submitTask(foundNonce);
-      } else if (type === 'progress') {
-        attemptsRef.current = workerAttempts;
-        setAttempts(workerAttempts);
-        const elapsed = (Date.now() - startTimeRef.current) / 1000;
-        setHashrate(Math.floor(workerAttempts / elapsed));
+  const fetchSolvedHistory = useCallback(async () => {
+    try {
+      const res = await fetch(`${AUTH_URL}/auth/solved-history`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSolvedHistory(data);
       }
-    };
-  }, [submitTask]);
+    } catch (error) {
+      console.error("Error fetching solved history");
+    }
+  }, [token]);
 
   const getTask = useCallback(async () => {
     try {
@@ -80,35 +75,16 @@ function MiningPage({ token }) {
         setAttempts(0);
         setHashrate(0);
         startTimeRef.current = Date.now();
-        // Update worker with new challenge
-        if (isMining) {
-          startWorker(data.challenge, difficulty);
-        }
+        // Update worker with new challenge will be handled by useEffect
       } else {
         setMessage(data.error || "Failed to get task");
       }
     } catch (error) {
       setMessage("Error fetching task");
     }
-  }, [token, isMining, difficulty, startWorker]);
+  }, [token]);
 
-  const fetchSolvedHistory = async () => {
-    try {
-      const res = await fetch(`${AUTH_URL}/auth/solved-history`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setSolvedHistory(data);
-      }
-    } catch (error) {
-      console.error("Error fetching solved history");
-    }
-  };
-
-  const submitTask = async (foundNonce) => {
+  const submitTask = useCallback(async (foundNonce) => {
     try {
       const res = await fetch(`${AUTH_URL}/auth/submit-task`, {
         method: 'POST',
@@ -138,7 +114,28 @@ function MiningPage({ token }) {
     } catch (error) {
       setMessage("Error submitting task");
     }
-  };
+  }, [challenge, difficulty, token, getTask, fetchSolvedHistory]);
+
+  const startWorker = useCallback((challenge, difficulty) => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+    }
+    workerRef.current = new Worker(new URL('../workers/miner.js', import.meta.url), { type: 'module' });
+    workerRef.current.postMessage({ challenge, difficulty });
+
+    workerRef.current.onmessage = (e) => {
+      const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
+      if (type === 'found') {
+        setNonce(foundNonce);
+        submitTask(foundNonce);
+      } else if (type === 'progress') {
+        attemptsRef.current = workerAttempts;
+        setAttempts(workerAttempts);
+        const elapsed = (Date.now() - startTimeRef.current) / 1000;
+        setHashrate(Math.floor(workerAttempts / elapsed));
+      }
+    };
+  }, [submitTask]);
 
   const startMining = () => {
     if (!challenge) return;
@@ -181,6 +178,12 @@ function MiningPage({ token }) {
       }
     };
   }, [getTask]);
+
+  useEffect(() => {
+    if (isMining && challenge) {
+      startWorker(challenge, difficulty);
+    }
+  }, [challenge, isMining, difficulty, startWorker]);
 
   return (
     <div className="min-h-screen pt-24 p-6">
