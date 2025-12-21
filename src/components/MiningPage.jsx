@@ -1,17 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
 function MiningPage({ token }) {
   const { isDark } = useTheme();
   const [challenge, setChallenge] = useState("");
-  const [difficulty, setDifficulty] = useState(24);
+  const [difficulty, setDifficulty] = useState(6);
   const [nonce, setNonce] = useState("");
   const [isMining, setIsMining] = useState(false);
   const [hashrate, setHashrate] = useState(0);
   const [attempts, setAttempts] = useState(0);
   const [message, setMessage] = useState("");
+  const [solvedHistory, setSolvedHistory] = useState([]);
   const workerRef = useRef(null);
   const startTimeRef = useRef(null);
   const attemptsRef = useRef(0);
@@ -46,11 +53,16 @@ function MiningPage({ token }) {
       const data = await res.json();
       if (res.ok) {
         setChallenge(data.challenge);
-        setDifficulty(data.difficulty);
         setNonce("");
         setMessage("");
         attemptsRef.current = 0;
         setAttempts(0);
+        setHashrate(0);
+        startTimeRef.current = Date.now();
+        // Update worker with new challenge
+        if (workerRef.current) {
+          workerRef.current.postMessage({ challenge: data.challenge, difficulty });
+        }
       } else {
         setMessage(data.error || "Failed to get task");
       }
@@ -58,6 +70,22 @@ function MiningPage({ token }) {
       setMessage("Error fetching task");
     }
   }, [token]);
+
+  const fetchSolvedHistory = async () => {
+    try {
+      const res = await fetch(`${AUTH_URL}/auth/solved-history`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSolvedHistory(data);
+      }
+    } catch (error) {
+      console.error("Error fetching solved history");
+    }
+  };
 
   const submitTask = async (foundNonce) => {
     try {
@@ -76,6 +104,8 @@ function MiningPage({ token }) {
         window.dispatchEvent(new CustomEvent('balanceChanged'));
         // Get new task
         setTimeout(getTask, 2000);
+        // Refresh history
+        fetchSolvedHistory();
       } else {
         if (data.error === "Task already solved") {
           setMessage("Task was already solved by another user. Getting new task...");
@@ -96,79 +126,30 @@ function MiningPage({ token }) {
     startTimeRef.current = Date.now();
     attemptsRef.current = 0;
 
-    // Start validity check every 5 seconds
+    // Start validity check every 5 seconds to switch to new task if current is solved
     validityCheckRef.current = setInterval(async () => {
       const isValid = await checkTaskValidity();
       if (!isValid) {
-        setMessage("Task was solved by another user. Getting new task...");
-        stopMining();
-        setTimeout(getTask, 1000);
+        getTask(); // Get new task without stopping mining
       }
     }, 5000);
 
-    // Use Web Worker for mining to avoid blocking UI
-    if (window.Worker) {
-      workerRef.current = new Worker(new URL('../workers/miner.js', import.meta.url), { type: 'module' });
-      workerRef.current.postMessage({ challenge, difficulty });
+    // Use Web Worker for mining
+    workerRef.current = new Worker(new URL('../workers/miner.js', import.meta.url), { type: 'module' });
+    workerRef.current.postMessage({ challenge, difficulty });
 
-      workerRef.current.onmessage = (e) => {
-        const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
-        if (type === 'found') {
-          setIsMining(false);
-          clearInterval(validityCheckRef.current);
-          setNonce(foundNonce);
-          submitTask(foundNonce);
-          workerRef.current.terminate();
-        } else if (type === 'progress') {
-          attemptsRef.current = workerAttempts;
-          setAttempts(workerAttempts);
-          const elapsed = (Date.now() - startTimeRef.current) / 1000;
-          setHashrate(Math.floor(workerAttempts / elapsed));
-        }
-      };
-    } else {
-      // Fallback without worker
-      mineWithoutWorker();
-    }
-  };
-
-  const mineWithoutWorker = async () => {
-    function hexToBytes(hex) {
-      const bytes = [];
-      for (let i = 0; i < hex.length; i += 2) {
-        bytes.push(parseInt(hex.substr(i, 2), 16));
+    workerRef.current.onmessage = (e) => {
+      const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
+      if (type === 'found') {
+        setNonce(foundNonce);
+        submitTask(foundNonce);
+      } else if (type === 'progress') {
+        attemptsRef.current = workerAttempts;
+        setAttempts(workerAttempts);
+        const elapsed = (Date.now() - startTimeRef.current) / 1000;
+        setHashrate(Math.floor(workerAttempts / elapsed));
       }
-      return new Uint8Array(bytes);
-    }
-
-    let currentNonce = 0;
-    const target = '0'.repeat(difficulty);
-    const challengeBytes = hexToBytes(challenge);
-
-    while (isMining) {
-      const nonceHex = currentNonce.toString(16);
-      const nonceBytes = hexToBytes(nonceHex.length % 2 === 0 ? nonceHex : '0' + nonceHex);
-      const data = new Uint8Array([...challengeBytes, ...nonceBytes]);
-      const hash = await crypto.subtle.digest("SHA-256", data);
-      const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-      attemptsRef.current++;
-      setAttempts(attemptsRef.current);
-      const elapsed = (Date.now() - startTimeRef.current) / 1000;
-      setHashrate(Math.floor(attemptsRef.current / elapsed));
-
-      if (hashHex.startsWith(target)) {
-        setIsMining(false);
-        setNonce(nonceHex);
-        submitTask(nonceHex);
-        return;
-      }
-
-      currentNonce++;
-      if (currentNonce % 1000 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
-      }
-    }
+    };
   };
 
   const stopMining = () => {
@@ -183,6 +164,7 @@ function MiningPage({ token }) {
 
   useEffect(() => {
     getTask();
+    fetchSolvedHistory();
     return () => {
       if (workerRef.current) {
         workerRef.current.terminate();
@@ -249,6 +231,21 @@ function MiningPage({ token }) {
               {message}
             </div>
           )}
+        </div>
+
+        <div className={`mt-8 p-6 rounded-lg shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+          <h2 className="text-xl font-semibold mb-4">Mining History</h2>
+          <div className="max-h-64 overflow-y-auto">
+            {solvedHistory.length === 0 ? (
+              <p className="text-gray-500">No mining history yet.</p>
+            ) : (
+              solvedHistory.map((item, index) => (
+                <div key={index} className="text-sm mb-1 bg-green-100 text-green-800 p-2 rounded">
+                  [{dayjs.utc(item.solved_at).tz('Asia/Jakarta').format('DD/MM/YYYY HH:mm:ss')}]: Task solved! Balance increased by Rp 100.000
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         <div className={`mt-8 p-6 rounded-lg shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
