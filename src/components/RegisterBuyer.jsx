@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import Swal from 'sweetalert2';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
@@ -43,22 +44,44 @@ function RegisterBuyer() {
         });
         const buyerData = await buyerRes.json();
         if (buyerData.id) {
-          alert("Registrasi berhasil! Silakan login.");
+          // Set initial balance
+          await fetch(`${AUTH_URL}/auth/balance/${userData.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: "buyer", amount: 100000 }),
+          });
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Registrasi berhasil! Saldo awal Rp 100.000 telah ditambahkan. Silakan login.',
+          });
           navigate("/login");
         } else {
-          alert("Gagal membuat profil pembeli: " + (buyerData.error || "Unknown error"));
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: 'Gagal membuat profil pembeli: ' + (buyerData.error || "Unknown error"),
+          });
         }
       } else {
-        alert("Gagal membuat akun: " + (userData.error || "Unknown error"));
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Gagal membuat akun: ' + (userData.error || "Unknown error"),
+        });
       }
     } catch (error) {
       console.error("Register error:", error);
-      alert("Terjadi kesalahan saat registrasi");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Terjadi kesalahan saat registrasi',
+      });
     }
   };
 
   return (
-    <div className={`min-h-screen px-4 pt-20 pb-8 transition-all duration-200 ${isDark ? 'bg-black' : 'bg-white'}`}>
+    <div className={`min-h-screen px-4 pt-24 pb-8 transition-all duration-200 ${isDark ? 'bg-black' : 'bg-white'}`}>
         <div className="flex justify-center">
           <div className={`backdrop-blur-md p-8 rounded-3xl shadow-2xl max-w-md w-full border transition-all duration-200 ${isDark ? 'bg-black/80 border-gray-900' : 'bg-white/80 border-gray-200'}`}>
           <div className="text-center mb-6">

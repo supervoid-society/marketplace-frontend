@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import Swal from 'sweetalert2';
 
 const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
 
@@ -8,7 +9,8 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const [form, setForm] = useState({ name: "", description: "", price: "", image_base64: "", image_content_type: "" });
+  const [form, setForm] = useState({ name: "", description: "", price: "", qty: "", image_base64: "", image_content_type: "" });
+  const [currentImageId, setCurrentImageId] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,24 +22,21 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
       const res = await fetch(`${CRUD_URL}/catalog-items/${id}`);
       if (res.ok) {
         const item = await res.json();
-        let imageData = { image_base64: "", image_content_type: "" };
-        if (item.image_id) {
-          try {
-            const imgRes = await fetch(`${CRUD_URL}/images/${item.image_id}`);
-            const imgData = await imgRes.json();
-            imageData = { image_base64: imgData.data, image_content_type: imgData.content_type };
-          } catch (error) {
-            console.error("Error fetching image:", error);
-          }
-        }
         setForm({
           name: item.name,
           description: item.description || "",
           price: item.price,
-          ...imageData,
+          qty: item.qty || "",
+          image_base64: "",
+          image_content_type: "",
         });
+        setCurrentImageId(item.image_id);
       } else {
-        alert("Item not found");
+        Swal.fire({
+          icon: 'error',
+          title: 'Not Found',
+          text: 'Item not found',
+        });
         navigate("/manage-catalog");
       }
     } catch (error) {
@@ -62,7 +61,11 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
         syncCartWithCatalog();
         navigate("/manage-catalog");
       } else {
-        alert("Failed to update item");
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Failed to update item',
+        });
       }
     } catch (error) {
       console.error("Update error:", error);
@@ -76,7 +79,8 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
   );
 
   return (
-    <div className={`max-w-lg mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
+    <div className={`min-h-screen pt-24 p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`max-w-lg mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
       <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Catalog Item</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -103,6 +107,14 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
           required
         />
         <input
+          type="number"
+          placeholder="Quantity"
+          value={form.qty}
+          onChange={(e) => setForm({ ...form, qty: e.target.value })}
+          className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+        <input
           type="file"
           accept="image/*"
           onChange={(e) => {
@@ -120,13 +132,14 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
           }}
           className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300"
         />
-        {form.image_base64 && (
+        {(currentImageId || form.image_base64) && (
           <div className="mb-4">
             <p className="text-sm text-gray-600 mb-2">Current Image:</p>
             <img
-              src={`data:${form.image_content_type};base64,${form.image_base64}`}
+              src={form.image_base64 ? `data:${form.image_content_type};base64,${form.image_base64}` : `${CRUD_URL}/images/${currentImageId}`}
               alt="Current"
               className="w-full h-48 object-cover rounded-lg border"
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
           </div>
         )}
@@ -143,6 +156,7 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 }

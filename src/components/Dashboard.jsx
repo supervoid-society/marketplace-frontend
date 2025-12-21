@@ -1,12 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTheme } from "../contexts/ThemeContext";
 import CatalogCRUD from "./CatalogCRUD";
 import UserCRUD from "./UserCRUD";
+import TransactionStats from "./TransactionStats";
+
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
 
 function Dashboard({ token, onLogout }) {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState("catalog");
+  const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0, revenue: 0 });
+
+  useEffect(() => {
+    fetchTransactionStats();
+  }, []);
+
+  const fetchTransactionStats = async () => {
+    try {
+      const res = await fetch(`${CRUD_URL}/transactions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      
+      const total = data.length;
+      const completed = data.filter(t => t.status === 'completed').length;
+      const pending = data.filter(t => t.status === 'pending').length;
+      const revenue = data.filter(t => t.status === 'completed').reduce((sum, t) => sum + t.amount, 0);
+      
+      setStats({ total, completed, pending, revenue });
+    } catch (error) {
+      console.error("Error fetching transaction stats:", error);
+    }
+  };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen pt-24 p-6">
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 sm:mb-0">Admin Dashboard</h1>
@@ -17,6 +47,25 @@ function Dashboard({ token, onLogout }) {
             Logout
           </button>
         </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className={`p-4 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+            <h3 className="text-lg font-semibold text-gray-800">Total Transactions</h3>
+            <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
+          </div>
+          <div className={`p-4 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+            <h3 className="text-lg font-semibold text-gray-800">Completed</h3>
+            <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+          </div>
+          <div className={`p-4 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+            <h3 className="text-lg font-semibold text-gray-800">Pending</h3>
+            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+          </div>
+          <div className={`p-4 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+            <h3 className="text-lg font-semibold text-gray-800">Total Revenue</h3>
+            <p className="text-2xl font-bold text-purple-600">Rp {stats.revenue.toLocaleString()}</p>
+          </div>
+        </div>
 
         <div className="mb-6">
           <nav className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 p-4 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
@@ -40,12 +89,23 @@ function Dashboard({ token, onLogout }) {
             >
               Manage Users
             </button>
+            <button
+              onClick={() => setActiveTab("transactions")}
+              className={`px-6 py-3 rounded-lg font-medium transition duration-200 ${
+                activeTab === "transactions"
+                  ? "bg-gray-600 text-white shadow-lg"
+                  : `${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
+              }`}
+            >
+              Transaction Stats
+            </button>
           </nav>
         </div>
 
         <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
           {activeTab === "catalog" && <CatalogCRUD token={token} />}
           {activeTab === "users" && <UserCRUD token={token} />}
+          {activeTab === "transactions" && <TransactionStats token={token} />}
         </div>
       </div>
     </div>

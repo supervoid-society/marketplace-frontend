@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import Swal from 'sweetalert2';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
@@ -24,7 +25,11 @@ function AddUser({ token }) {
         navigate("/manage-users");
       } else {
         const error = await res.json();
-        alert(error.error || "Failed to add user");
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: error.error || "Failed to add user",
+        });
       }
     } catch (error) {
       console.error("Add error:", error);
@@ -32,7 +37,8 @@ function AddUser({ token }) {
   };
 
   return (
-    <div className={`max-w-md mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
+    <div className={`min-h-screen pt-24 p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`max-w-md mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
       <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New User</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -64,6 +70,7 @@ function AddUser({ token }) {
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 }

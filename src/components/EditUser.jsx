@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import Swal from 'sweetalert2';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
@@ -26,7 +27,11 @@ function EditUser({ token }) {
         const user = await res.json();
         setForm({ username: user.username, password: "" });
       } else {
-        alert("User not found");
+        Swal.fire({
+          icon: 'error',
+          title: 'Not Found',
+          text: 'User not found',
+        });
         navigate("/manage-users");
       }
     } catch (error) {
@@ -54,7 +59,11 @@ function EditUser({ token }) {
       if (res.ok) {
         navigate("/manage-users");
       } else {
-        alert("Failed to update user");
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Failed to update user',
+        });
       }
     } catch (error) {
       console.error("Update error:", error);
@@ -68,7 +77,8 @@ function EditUser({ token }) {
   );
 
   return (
-    <div className={`max-w-md mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
+    <div className={`min-h-screen pt-24 p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`max-w-md mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
       <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit User</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -99,6 +109,7 @@ function EditUser({ token }) {
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 }

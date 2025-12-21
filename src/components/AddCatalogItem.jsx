@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import Swal from 'sweetalert2';
 
 const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
 
 function AddCatalogItem({ token }) {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const [form, setForm] = useState({ name: "", description: "", price: "", image_base64: "", image_content_type: "" });
+  const [form, setForm] = useState({ name: "", description: "", price: "", qty: "", image_base64: "", image_content_type: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +24,11 @@ function AddCatalogItem({ token }) {
       if (res.ok) {
         navigate("/manage-catalog");
       } else {
-        alert("Failed to add item");
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Failed to add item',
+        });
       }
     } catch (error) {
       console.error("Add error:", error);
@@ -31,7 +36,8 @@ function AddCatalogItem({ token }) {
   };
 
   return (
-    <div className={`max-w-lg mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
+    <div className={`min-h-screen pt-24 p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`max-w-lg mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
       <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New Catalog Item</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -54,6 +60,14 @@ function AddCatalogItem({ token }) {
           placeholder="Harga (Rp)"
           value={form.price}
           onChange={(e) => setForm({ ...form, price: e.target.value })}
+          className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+        <input
+          type="number"
+          placeholder="Quantity"
+          value={form.qty}
+          onChange={(e) => setForm({ ...form, qty: e.target.value })}
           className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
@@ -88,6 +102,7 @@ function AddCatalogItem({ token }) {
           </button>
         </div>
       </form>
+    </div>
     </div>
   );
 }

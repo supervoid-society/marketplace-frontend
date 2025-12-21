@@ -1,19 +1,23 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
+import Swal from 'sweetalert2';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
 function Settings() {
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState("personal");
+  const [activeTab, setActiveTab] = useState("security"); // Default to security
   const [userRole, setUserRole] = useState("");
+  const [hasProfileImage, setHasProfileImage] = useState(false);
   const [personalForm, setPersonalForm] = useState({
     full_name: "",
     address: "",
     phone: "",
     store_name: "",
     description: "",
-    contact_phone: ""
+    contact_phone: "",
+    image: null,
+    imagePreview: null
   });
   const [securityForm, setSecurityForm] = useState({
     currentPassword: "",
@@ -29,11 +33,17 @@ function Settings() {
     if (token) {
       const payload = JSON.parse(atob(token.split('.')[1]));
       setUserRole(payload.role);
+      if (payload.role === 'admin') {
+        setActiveTab("security");
+      }
       loadPersonalInfo(payload.role);
     }
   }, [token]);
 
   const loadPersonalInfo = async (role) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const payload = JSON.parse(atob(token.split('.')[1]));
     try {
       if (role === 'buyer') {
         const res = await fetch(`${AUTH_URL}/buyers/me`, {
@@ -49,6 +59,19 @@ function Settings() {
             description: "",
             contact_phone: ""
           });
+          
+          // Load current profile image
+          if (data.image_id) {
+            try {
+              const imgRes = await fetch(`${AUTH_URL}/users/profile-image/${payload.userId}`);
+              setHasProfileImage(imgRes.ok);
+            } catch (error) {
+              console.error("Error loading current profile image:", error);
+              setHasProfileImage(false);
+            }
+          } else {
+            setHasProfileImage(false);
+          }
         }
       } else if (role === 'seller') {
         const res = await fetch(`${AUTH_URL}/sellers/me`, {
@@ -64,6 +87,19 @@ function Settings() {
             description: data.description || "",
             contact_phone: data.contact_phone || ""
           });
+          
+          // Load current profile image
+          if (data.image_id) {
+            try {
+              const imgRes = await fetch(`${AUTH_URL}/users/profile-image/${payload.userId}`);
+              setHasProfileImage(imgRes.ok);
+            } catch (error) {
+              console.error("Error loading current profile image:", error);
+              setHasProfileImage(false);
+            }
+          } else {
+            setHasProfileImage(false);
+          }
         }
       }
     } catch (error) {
@@ -92,6 +128,42 @@ function Settings() {
         };
       }
 
+      // Add image if exists
+      if (personalForm.image) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64 = e.target.result.split(',')[1];
+          body.image_base64 = base64;
+          body.image_content_type = personalForm.image.type;
+
+          const res = await fetch(endpoint, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(body)
+          });
+
+          if (res.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil',
+              text: 'Informasi berhasil diperbarui!',
+            });
+            setPersonalForm(prev => ({ ...prev, image: null, imagePreview: null }));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal',
+              text: 'Gagal memperbarui informasi',
+            });
+          }
+        };
+        reader.readAsDataURL(personalForm.image);
+        return;
+      }
+
       const res = await fetch(endpoint, {
         method: "PUT",
         headers: {
@@ -102,13 +174,25 @@ function Settings() {
       });
 
       if (res.ok) {
-        alert("Informasi berhasil diperbarui!");
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil',
+          text: 'Informasi berhasil diperbarui!',
+        });
       } else {
-        alert("Gagal memperbarui informasi");
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Gagal memperbarui informasi',
+        });
       }
     } catch (error) {
       console.error("Update error:", error);
-      alert("Terjadi kesalahan");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Terjadi kesalahan',
+      });
     } finally {
       setLoading(false);
     }
@@ -117,7 +201,11 @@ function Settings() {
   const handleSecurityUpdate = async (e) => {
     e.preventDefault();
     if (securityForm.newPassword !== securityForm.confirmPassword) {
-      alert("Password baru tidak cocok");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Password baru tidak cocok',
+      });
       return;
     }
     setLoading(true);
@@ -136,7 +224,11 @@ function Settings() {
       });
 
       if (res.ok) {
-        alert("Keamanan berhasil diperbarui!");
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil',
+          text: 'Keamanan berhasil diperbarui!',
+        });
         setSecurityForm({
           currentPassword: "",
           newUsername: "",
@@ -150,11 +242,19 @@ function Settings() {
         }
       } else {
         const error = await res.json();
-        alert("Gagal memperbarui keamanan: " + (error.error || "Unknown error"));
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Gagal memperbarui keamanan: ' + (error.error || "Unknown error"),
+        });
       }
     } catch (error) {
       console.error("Security update error:", error);
-      alert("Terjadi kesalahan");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Terjadi kesalahan',
+      });
     } finally {
       setLoading(false);
     }
@@ -165,7 +265,7 @@ function Settings() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
+    <div className={`min-h-screen pt-24 py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Pengaturan</h1>
@@ -174,16 +274,18 @@ function Settings() {
 
         <div className="mb-6">
           <nav className={`flex space-x-4 p-4 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-            <button
-              onClick={() => setActiveTab("personal")}
-              className={`px-6 py-3 rounded-lg font-medium transition duration-200 ${
-                activeTab === "personal"
-                  ? "bg-gray-600 text-white shadow-lg"
-                  : `${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
-              }`}
-            >
-              Informasi Pribadi
-            </button>
+            {userRole !== 'admin' && (
+              <button
+                onClick={() => setActiveTab("personal")}
+                className={`px-6 py-3 rounded-lg font-medium transition duration-200 ${
+                  activeTab === "personal"
+                    ? "bg-gray-600 text-white shadow-lg"
+                    : `${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
+                }`}
+              >
+                Informasi Pribadi
+              </button>
+            )}
             <button
               onClick={() => setActiveTab("security")}
               className={`px-6 py-3 rounded-lg font-medium transition duration-200 ${
@@ -198,7 +300,7 @@ function Settings() {
         </div>
 
         <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-          {activeTab === "personal" && (
+          {activeTab === "personal" && userRole !== 'admin' && (
             <form onSubmit={handlePersonalUpdate} className="space-y-6">
               <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                 Update Informasi Pribadi
@@ -303,6 +405,60 @@ function Settings() {
                   </div>
                 </>
               )}
+
+              {/* Image Upload */}
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Foto Profil
+                </label>
+                
+                {/* Current Profile Image */}
+                {hasProfileImage && (
+                  <div className="mb-4">
+                    <p className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Foto Profil Saat Ini:</p>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={`${AUTH_URL}/users/profile-image/${payload.userId}`}
+                        alt="Current Profile"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
+                      />
+                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Foto profil Anda saat ini</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setPersonalForm({
+                          ...personalForm,
+                          image: file,
+                          imagePreview: URL.createObjectURL(file)
+                        });
+                      }
+                    }}
+                    className={`file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:transition-colors ${
+                      isDark
+                        ? 'file:bg-gray-700 file:text-white file:hover:bg-gray-600'
+                        : 'file:bg-gray-100 file:text-gray-700 file:hover:bg-gray-200'
+                    }`}
+                  />
+                  {personalForm.imagePreview && (
+                    <img
+                      src={personalForm.imagePreview}
+                      alt="Preview"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
+                    />
+                  )}
+                </div>
+                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {hasProfileImage ? 'Upload gambar baru untuk mengganti foto profil' : 'Pilih gambar untuk foto profil (opsional)'}
+                </p>
+              </div>
 
               <button
                 type="submit"

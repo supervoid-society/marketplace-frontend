@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import Swal from 'sweetalert2';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
@@ -22,7 +23,11 @@ function LoginPage() {
         localStorage.setItem("token", data.token);
         navigate("/catalog");
       } else {
-        alert("Login failed");
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Gagal',
+          text: 'Login failed',
+        });
       }
     } catch (error) {
       console.error("Login error:", error);
