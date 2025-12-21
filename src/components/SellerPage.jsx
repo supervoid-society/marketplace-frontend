@@ -11,7 +11,8 @@ function SellerPage() {
   const [catalog, setCatalog] = useState([]);
   const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sellerImage, setSellerImage] = useState(null);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
 
   const formatRupiah = (angka) => {
     return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -28,21 +29,6 @@ function SellerPage() {
       if (sellerRes.ok) {
         const sellerData = await sellerRes.json();
         setSeller(sellerData);
-        
-        // Fetch seller image if exists
-        if (sellerData.image_id) {
-          try {
-            const imgRes = await fetch(`${AUTH_URL}/users/profile-image/${userId}`);
-            if (imgRes.ok) {
-              const imgData = await imgRes.json();
-              setSellerImage(imgData);
-            } else {
-              console.error("Failed to fetch seller image:", imgRes.status);
-            }
-          } catch (error) {
-            console.error("Error fetching seller image:", error);
-          }
-        }
       }
 
       // Fetch catalog items for this seller
@@ -50,6 +36,26 @@ function SellerPage() {
       const allCatalog = await catalogRes.json();
       const sellerCatalog = allCatalog.filter(item => item.user_id === parseInt(userId));
       setCatalog(sellerCatalog);
+
+      // Fetch reviews for all seller items and calculate average
+      let totalRating = 0;
+      let reviewCount = 0;
+      for (const item of sellerCatalog) {
+        try {
+          const reviewRes = await fetch(`${CRUD_URL}/reviews/${item.id}`);
+          if (reviewRes.ok) {
+            const reviews = await reviewRes.json();
+            reviews.forEach(review => {
+              totalRating += review.rating;
+              reviewCount++;
+            });
+          }
+        } catch (error) {
+          console.error(`Error fetching reviews for item ${item.id}:`, error);
+        }
+      }
+      setTotalReviews(reviewCount);
+      setAverageRating(reviewCount > 0 ? (totalRating / reviewCount).toFixed(1) : 0);
     } catch (error) {
       console.error("Error fetching seller catalog:", error);
     } finally {
@@ -77,17 +83,22 @@ function SellerPage() {
               <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg overflow-hidden ${
                 isDark ? 'bg-blue-900/50 border-2 border-blue-700' : 'bg-white border-2 border-blue-200'
               }`}>
-                {sellerImage ? (
+                {seller.image_id ? (
                   <img
-                    src={`data:${sellerImage.content_type};base64,${sellerImage.data}`}
+                    src={`${AUTH_URL}/users/profile-image/${userId}`}
                     alt={seller.store_name}
                     className="w-full h-full object-cover"
+                    onError={(e) => { 
+                      e.target.style.display = 'none'; 
+                      e.target.nextElementSibling.style.display = 'flex';
+                    }}
                   />
-                ) : (
+                ) : null}
+                <div className={`w-full h-full flex items-center justify-center ${seller.image_id ? 'hidden' : ''}`}>
                   <svg className={`w-10 h-10 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
-                )}
+                </div>
                 </div>
                 <div className="flex-1">
                   <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>{seller.store_name}</h1>
@@ -110,6 +121,14 @@ function SellerPage() {
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       <span>Toko Terpercaya</span>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                      isDark ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                    }`}>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span>{averageRating} stars ({totalReviews} reviews)</span>
                     </div>
                   </div>
                 </div>

@@ -134,6 +134,8 @@ function Checkout() {
     
     // Clear cart after successful checkout
     await clearCart();
+    // Dispatch event to refresh balance
+    window.dispatchEvent(new CustomEvent('balanceChanged'));
     Swal.fire({
       icon: 'success',
       title: 'Checkout Berhasil',

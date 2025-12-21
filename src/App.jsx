@@ -91,6 +91,16 @@ function App() {
 
     window.addEventListener("storage", handleStorageChange);
 
+    const handleBalanceChange = () => {
+      setBalanceFetched(false); // Reset flag
+      const currentUserId = getUserId(token);
+      if (currentUserId) {
+        fetchBalance(currentUserId, getUserRole(token));
+      }
+    };
+
+    window.addEventListener("balanceChanged", handleBalanceChange);
+
     // Also check for changes within the same tab (less frequent)
     const interval = setInterval(() => {
       const currentToken = localStorage.getItem("token") || "";
@@ -103,6 +113,7 @@ function App() {
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("balanceChanged", handleBalanceChange);
       clearInterval(interval);
     };
   }, [token]);

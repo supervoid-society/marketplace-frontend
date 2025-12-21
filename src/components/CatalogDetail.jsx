@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCart } from "../contexts/CartContext";
+import Review from "./Review";
 
 const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
 const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
@@ -12,7 +13,6 @@ function CatalogDetail() {
   const { addToCart } = useCart();
   const [item, setItem] = useState(null);
   const [seller, setSeller] = useState(null);
-  const [sellerImage, setSellerImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
 
@@ -36,21 +36,6 @@ function CatalogDetail() {
         if (sellerRes.ok) {
           const sellerData = await sellerRes.json();
           setSeller(sellerData);
-          
-          // Fetch seller image if exists
-          if (sellerData.image_id) {
-            try {
-              const imgRes = await fetch(`${AUTH_URL}/users/profile-image/${data.user_id}`);
-              if (imgRes.ok) {
-                const imgData = await imgRes.json();
-                setSellerImage(imgData);
-              } else {
-                console.error("Failed to fetch seller image:", imgRes.status);
-              }
-            } catch (error) {
-              console.error("Error fetching seller image:", error);
-            }
-          }
         }
       } catch (error) {
         console.error("Error fetching seller:", error);
@@ -124,17 +109,22 @@ function CatalogDetail() {
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${
                       isDark ? 'bg-blue-900/50' : 'bg-blue-100'
                     }`}>
-                      {sellerImage ? (
+                      {seller.image_id ? (
                         <img
-                          src={`data:${sellerImage.content_type};base64,${sellerImage.data}`}
+                          src={`${AUTH_URL}/users/profile-image/${item.user_id}`}
                           alt={seller.store_name}
                           className="w-full h-full object-cover"
+                          onError={(e) => { 
+                            e.target.style.display = 'none'; 
+                            e.target.nextElementSibling.style.display = 'flex';
+                          }}
                         />
-                      ) : (
+                      ) : null}
+                      <div className={`w-full h-full flex items-center justify-center ${seller.image_id ? 'hidden' : ''}`}>
                         <svg className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
-                      )}
+                      </div>
                     </div>
                     <Link
                       to={`/seller/${item.user_id}`}
@@ -228,6 +218,7 @@ function CatalogDetail() {
           </div>
         </div>
       </div>
+      <Review itemId={id} />
     </div>
   );
 }

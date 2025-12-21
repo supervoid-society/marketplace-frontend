@@ -108,16 +108,28 @@ function PublicCatalog() {
                   {/* Seller and Stock in one row */}
                   <div className="flex items-center justify-between gap-3">
                     {sellers[item.user_id] && (
-                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium flex-1 ${
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium flex-1 justify-center ${
                         isDark ? 'bg-blue-900/30 text-blue-300 border border-blue-700/50' : 'bg-blue-50 text-blue-700 border border-blue-200'
                       }`}>
                         <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
-                          <img
-                            src={`${AUTH_URL}/users/profile-image/${item.user_id}`}
-                            alt={sellers[item.user_id].store_name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => { e.target.style.display = 'none'; }}
-                          />
+                          {sellers[item.user_id].image_id ? (
+                            <img
+                              src={`${AUTH_URL}/users/profile-image/${item.user_id}`}
+                              alt={sellers[item.user_id].store_name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { 
+                                e.target.style.display = 'none'; 
+                                e.target.nextElementSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center rounded-full overflow-hidden ${
+                            sellers[item.user_id].image_id ? 'hidden' : ''
+                          } ${isDark ? 'bg-blue-900/50 border border-blue-700' : 'bg-white border border-blue-200'}`}>
+                            <svg className={`w-2 h-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                            </svg>
+                          </div>
                         </div>
                         <Link
                           to={`/seller/${item.user_id}`}
