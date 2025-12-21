@@ -133,11 +133,23 @@ function MiningPage({ token }) {
   };
 
   const mineWithoutWorker = async () => {
+    function hexToBytes(hex) {
+      const bytes = [];
+      for (let i = 0; i < hex.length; i += 2) {
+        bytes.push(parseInt(hex.substr(i, 2), 16));
+      }
+      return new Uint8Array(bytes);
+    }
+
     let currentNonce = 0;
     const target = '0'.repeat(difficulty);
+    const challengeBytes = hexToBytes(challenge);
 
     while (isMining) {
-      const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(challenge + currentNonce.toString(16)));
+      const nonceHex = currentNonce.toString(16);
+      const nonceBytes = hexToBytes(nonceHex.length % 2 === 0 ? nonceHex : '0' + nonceHex);
+      const data = new Uint8Array([...challengeBytes, ...nonceBytes]);
+      const hash = await crypto.subtle.digest("SHA-256", data);
       const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 
       attemptsRef.current++;
@@ -147,8 +159,8 @@ function MiningPage({ token }) {
 
       if (hashHex.startsWith(target)) {
         setIsMining(false);
-        setNonce(currentNonce.toString(16));
-        submitTask(currentNonce.toString(16));
+        setNonce(nonceHex);
+        submitTask(nonceHex);
         return;
       }
 
@@ -268,17 +280,22 @@ def submit_task(challenge, nonce, difficulty):
 
 def mine(challenge, difficulty):
     target = '0' * difficulty
+    challenge_bytes = bytes.fromhex(challenge)
     nonce = 0
     start_time = time.time()
     attempts = 0
     
     while True:
-        hash_input = challenge + hex(nonce)[2:]
-        hash_result = hashlib.sha256(hash_input.encode()).hexdigest()
+        nonce_hex = hex(nonce)[2:]
+        if len(nonce_hex) % 2 != 0:
+            nonce_hex = '0' + nonce_hex
+        nonce_bytes = bytes.fromhex(nonce_hex)
+        data = challenge_bytes + nonce_bytes
+        hash_result = hashlib.sha256(data).hexdigest()
         attempts += 1
         
         if hash_result.startswith(target):
-            return hex(nonce)[2:], attempts
+            return nonce_hex, attempts
         
         nonce += 1
         
