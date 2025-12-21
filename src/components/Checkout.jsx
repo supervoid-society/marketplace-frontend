@@ -6,12 +6,14 @@ import jsPDF from "jspdf";
 import Swal from 'sweetalert2';
 
 const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
 
 function Checkout() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const { cart, clearCart } = useCart();
   const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState(0);
 
   const formatRupiah = (angka) => {
     return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -29,7 +31,27 @@ function Checkout() {
   };
 
   useEffect(() => {
-    // No need to fetch images or check stock here - backend handles stock validation
+    const fetchBalance = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      try {
+        const res = await fetch(`${AUTH_URL}/transactions/balance`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setBalance(data.balance);
+        }
+      } catch (error) {
+        console.error("Failed to fetch balance:", error);
+      }
+    };
+
+    fetchBalance();
+
     if (cart.length > 0) {
       setLoading(false);
     } else {
@@ -38,7 +60,7 @@ function Checkout() {
   }, [cart]);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const canCheckout = cart.length > 0;
+  const canCheckout = cart.length > 0 && total <= balance;
 
   const handlePayment = async () => {
     const user = getUserFromToken();
@@ -52,6 +74,88 @@ function Checkout() {
     }
 
     const token = localStorage.getItem("token");
+
+    // Fetch balance with signature
+    let balanceData;
+    try {
+      const balanceRes = await fetch(`${AUTH_URL}/transactions/balance`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (!balanceRes.ok) {
+        throw new Error('Failed to fetch balance');
+      }
+      balanceData = await balanceRes.json();
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Gagal mengambil saldo',
+      });
+      return;
+    }
+
+    // Process each item in cart
+    try {
+      for (const item of cart) {
+        // Checkout item
+        const checkoutRes = await fetch(`${CRUD_URL}/transactions/checkout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ 
+            itemId: item.id, 
+            quantity: item.quantity, 
+            balance: balanceData.balance, 
+            signature: balanceData.signature 
+          })
+        });
+
+        if (!checkoutRes.ok) {
+          const errorData = await checkoutRes.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Checkout Gagal',
+            text: `Checkout item ${item.name} gagal: ${errorData.error}`,
+          });
+          return;
+        }
+
+        const checkoutData = await checkoutRes.json();
+        const { transactionId, sellerId, amount, signature } = checkoutData;
+
+        // Transfer money
+        const transferRes = await fetch(`${AUTH_URL}/transactions/transfer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ transactionId, sellerId, amount, signature })
+        });
+
+        if (!transferRes.ok) {
+          const errorData = await transferRes.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Transfer Gagal',
+            text: `Transfer untuk ${item.name} gagal: ${errorData.error}`,
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Terjadi kesalahan saat pembayaran',
+      });
+      return;
+    }
 
     // Generate PDF receipt first
     const doc = new jsPDF();
@@ -206,6 +310,15 @@ function Checkout() {
                   <span>TOTAL:</span>
                   <span>{formatRupiah(total)}</span>
                 </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span>Saldo Anda:</span>
+                  <span>{formatRupiah(balance)}</span>
+                </div>
+                {total > balance && (
+                  <div className="text-red-500 text-sm mt-1">
+                    Saldo tidak cukup untuk pembelian ini.
+                  </div>
+                )}
               </div>
               
               <div className="text-center mt-6 text-xs">
@@ -230,7 +343,7 @@ function Checkout() {
                     : 'bg-gray-400 text-white cursor-not-allowed'
                 }`}
               >
-                {canCheckout ? 'Bayar Sekarang' : 'Keranjang Kosong'}
+                {canCheckout ? 'Bayar Sekarang' : (cart.length === 0 ? 'Keranjang Kosong' : 'Saldo Tidak Cukup')}
               </button>
             </div>
           </>
