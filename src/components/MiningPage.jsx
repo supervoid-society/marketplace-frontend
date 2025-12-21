@@ -71,11 +71,7 @@ function MiningPage({ token }) {
         setChallenge(data.challenge);
         setNonce("");
         setMessage("");
-        attemptsRef.current = 0;
-        setAttempts(0);
-        setHashrate(0);
-        startTimeRef.current = Date.now();
-        // Update worker with new challenge will be handled by useEffect
+        // Don't reset attempts and hashrate here, keep cumulative
       } else {
         setMessage(data.error || "Failed to get task");
       }
