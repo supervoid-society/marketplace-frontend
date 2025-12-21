@@ -34,7 +34,7 @@ function SellerPage() {
       // Fetch catalog items for this seller
       const catalogRes = await fetch(`${CRUD_URL}/catalog-items`);
       const allCatalog = await catalogRes.json();
-      const sellerCatalog = allCatalog.filter(item => item.user_id === parseInt(userId));
+      const sellerCatalog = allCatalog.filter(item => item.user_id === userId);
       setCatalog(sellerCatalog);
 
       // Fetch reviews for all seller items and calculate average

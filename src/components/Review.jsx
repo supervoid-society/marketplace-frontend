@@ -350,14 +350,14 @@ function Review({ itemId }) {
                   onChange={(e) => setReplyText(e.target.value)}
                   className="w-full p-2 border rounded text-sm"
                   rows="3"
-                  placeholder="Write your reply..."
+                  placeholder={review.reply ? "Edit your reply..." : "Write your reply..."}
                 />
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => handleReply(review.id)}
                     className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
                   >
-                    Submit Reply
+                    {review.reply ? 'Update Reply' : 'Submit Reply'}
                   </button>
                   <button
                     onClick={() => { setReplyingTo(null); setReplyText(''); }}
