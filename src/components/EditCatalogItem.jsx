@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { useCart } from "../contexts/CartContext";
 import Swal from 'sweetalert2';
 
 const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
 
-function EditCatalogItem({ token, syncCartWithCatalog }) {
+function EditCatalogItem({ token }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { refreshCart } = useCart();
   const [form, setForm] = useState({ name: "", description: "", price: "", qty: "", image_base64: "", image_content_type: "" });
   const [currentImageId, setCurrentImageId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ function EditCatalogItem({ token, syncCartWithCatalog }) {
         body: JSON.stringify(form),
       });
       if (res.ok) {
-        syncCartWithCatalog();
+        refreshCart();
         navigate("/manage-catalog");
       } else {
         Swal.fire({

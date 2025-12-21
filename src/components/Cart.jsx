@@ -8,7 +8,7 @@ const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788
 
 function Cart() {
   const { isDark } = useTheme();
-  const { cart, updateCart, clearCart } = useCart();
+  const { cart, updateCartItem, clearCart } = useCart();
   const [stockCache, setStockCache] = useState({}); // Cache for stock data
   const [lastStockFetch, setLastStockFetch] = useState({}); // Track last fetch time
 
@@ -21,7 +21,7 @@ function Cart() {
   const updateQuantity = async (cartItemId, catalogItemId, quantity) => {
     if (quantity <= 0) {
       // Remove item from cart
-      await updateCart(cartItemId, 0);
+      await updateCartItem(cartItemId, 0);
     } else {
       try {
         // Check cache first (cache for 30 seconds)
@@ -39,7 +39,7 @@ function Cart() {
         
         const newQuantity = Math.min(quantity, maxQty);
         
-        await updateCart(cartItemId, newQuantity);
+        await updateCartItem(cartItemId, newQuantity);
         
         if (quantity > maxQty) {
           Swal.fire({
@@ -51,7 +51,7 @@ function Cart() {
       } catch (error) {
         console.error("Error fetching stock:", error);
         // Fallback to old logic if fetch fails
-        await updateCart(cartItemId, quantity);
+        await updateCartItem(cartItemId, quantity);
       }
     }
   };
