@@ -18,11 +18,30 @@ function Review({ itemId }) {
   const [buyerInfos, setBuyerInfos] = useState({});
   const [editingReview, setEditingReview] = useState(null);
   const [editReview, setEditReview] = useState({ rating: 5, comment: '' });
+  const [item, setItem] = useState(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [submittingReply, setSubmittingReply] = useState(false);
+  const [submittingEdit, setSubmittingEdit] = useState(false);
 
   useEffect(() => {
     fetchReviews();
+    fetchItem();
     checkUserAndPurchase();
   }, [itemId]);
+
+  // Reset reply state if user is not seller
+  useEffect(() => {
+    if (user && user.role !== 'seller' && replyingTo !== null) {
+      setReplyingTo(null);
+      setReplyText('');
+    }
+    if (user && editingReview !== null) {
+      const review = reviews.find(r => r.id === editingReview);
+      if (review && (user.role !== 'buyer' || user.id !== review.buyer_id)) {
+        setEditingReview(null);
+      }
+    }
+  }, [user, replyingTo, editingReview, reviews]);
 
   const fetchReviews = async () => {
     try {
@@ -32,7 +51,7 @@ function Review({ itemId }) {
         setReviews(data);
 
         // Fetch buyer info for each review
-        const buyerIds = [...new Set(data.map(review => review.buyer_id))];
+        const buyerIds = [...new Set(data.map(review => review.buyer_id).filter(id => id != null))];
         const buyerInfoPromises = buyerIds.map(async (buyerId) => {
           try {
             const buyerRes = await fetch(`${AUTH_URL}/users/${buyerId}`);
@@ -77,6 +96,20 @@ function Review({ itemId }) {
     }
   };
 
+  const fetchItem = async () => {
+    try {
+      const res = await fetch(`${CRUD_URL}/catalog-items/${itemId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setItem(data);
+      } else {
+        console.error("Failed to fetch item:", res.status);
+      }
+    } catch (error) {
+      console.error("Error fetching item:", error);
+    }
+  };
+
   const checkUserAndPurchase = async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -112,6 +145,7 @@ function Review({ itemId }) {
     const token = localStorage.getItem('token');
     if (!token) return;
 
+    setSubmittingReview(true);
     try {
       // Get transactions to find the transaction_id
       const transRes = await fetch(`${CRUD_URL}/transactions/user`, {
@@ -121,7 +155,10 @@ function Review({ itemId }) {
       const transaction = transData.find(trans => 
         trans.item_id === itemId && trans.status === 'completed'
       );
-      if (!transaction) return;
+      if (!transaction) {
+        alert('You must purchase this item first to leave a review.');
+        return;
+      }
 
       const res = await fetch(`${CRUD_URL}/reviews`, {
         method: 'POST',
@@ -137,12 +174,17 @@ function Review({ itemId }) {
       });
 
       if (res.ok) {
-        setShowAddReview(false);
-        setNewReview({ rating: 5, comment: '' });
         fetchReviews();
+      } else {
+        alert('Failed to submit review. Please try again.');
       }
     } catch (error) {
       console.error("Error adding review:", error);
+      alert('Error submitting review. Please try again.');
+    } finally {
+      setSubmittingReview(false);
+      setShowAddReview(false);
+      setNewReview({ rating: 5, comment: '' });
     }
   };
 
@@ -150,6 +192,7 @@ function Review({ itemId }) {
     const token = localStorage.getItem('token');
     if (!token) return;
 
+    setSubmittingEdit(true);
     try {
       const res = await fetch(`${CRUD_URL}/reviews/${reviewId}`, {
         method: 'PUT',
@@ -164,11 +207,16 @@ function Review({ itemId }) {
       });
 
       if (res.ok) {
-        setEditingReview(null);
         fetchReviews();
+      } else {
+        alert('Failed to update review. Please try again.');
       }
     } catch (error) {
       console.error("Error editing review:", error);
+      alert('Error updating review. Please try again.');
+    } finally {
+      setSubmittingEdit(false);
+      setEditingReview(null);
     }
   };
 
@@ -176,6 +224,7 @@ function Review({ itemId }) {
     const token = localStorage.getItem('token');
     if (!token) return;
 
+    setSubmittingReply(true);
     try {
       const res = await fetch(`${CRUD_URL}/reviews/${reviewId}/reply`, {
         method: 'PUT',
@@ -187,12 +236,17 @@ function Review({ itemId }) {
       });
 
       if (res.ok) {
-        setReplyingTo(null);
-        setReplyText('');
         fetchReviews();
+      } else {
+        alert('Failed to submit reply. Please try again.');
       }
     } catch (error) {
       console.error("Error replying:", error);
+      alert('Error submitting reply. Please try again.');
+    } finally {
+      setSubmittingReply(false);
+      setReplyingTo(null);
+      setReplyText('');
     }
   };
 
@@ -247,8 +301,8 @@ function Review({ itemId }) {
               rows="3"
             />
           </div>
-          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-            Submit Review
+          <button type="submit" disabled={submittingReview} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50">
+            {submittingReview ? 'Submitting...' : 'Submit Review'}
           </button>
           <button
             type="button"
@@ -267,7 +321,9 @@ function Review({ itemId }) {
         reviews.map(review => (
           <div key={review.id} className="mb-4 p-4 border rounded bg-gray-50">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-gray-800">{buyerInfos[review.buyer_id] || `Buyer ${review.buyer_id}`}</span>
+              <span className="font-semibold text-gray-800">
+                {buyerInfos[review.buyer_id] || `Buyer ${review.buyer_id}`}
+              </span>
               <div className="flex">{renderStars(review.rating)}</div>
             </div>
             {review.comment && (
@@ -279,9 +335,8 @@ function Review({ itemId }) {
                 <p className="text-blue-700 mt-1">{review.reply}</p>
               </div>
             )}
-            {user && user.role === 'buyer' && user.id === review.buyer_id && (
-              <button
-                onClick={() => {
+            {user && user.role === 'buyer' && user.id === review.buyer_id && !editingReview && (
+              <button                type="button"                onClick={() => {
                   setEditingReview(review.id);
                   setEditReview({ rating: review.rating, comment: review.comment || '' });
                 }}
@@ -290,18 +345,29 @@ function Review({ itemId }) {
                 Edit Review
               </button>
             )}
-            {user && user.role === 'seller' && (
+            {user && user.role === 'seller' && user.id === item?.user_id && !review.reply && (
               <button
                 onClick={() => {
                   setReplyingTo(review.id);
-                  setReplyText(review.reply || '');
+                  setReplyText('');
                 }}
                 className="mt-2 text-sm text-green-600 hover:text-green-800 underline"
               >
-                {review.reply ? 'Edit Reply' : 'Reply'}
+                Reply
               </button>
             )}
-            {editingReview === review.id && (
+            {user && user.role === 'seller' && user.id === item?.user_id && review.reply && (
+              <button
+                onClick={() => {
+                  setReplyingTo(review.id);
+                  setReplyText(review.reply);
+                }}
+                className="mt-2 text-sm text-green-600 hover:text-green-800 underline"
+              >
+                Edit Reply
+              </button>
+            )}
+            {editingReview === review.id && user && user.role === 'buyer' && user.id === review.buyer_id && (
               <div className="mt-3 p-3 border rounded bg-white">
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1">Rating:</label>
@@ -329,12 +395,15 @@ function Review({ itemId }) {
                 </div>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => handleEditReview(review.id)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                    disabled={submittingEdit}
+                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 disabled:opacity-50"
                   >
-                    Update
+                    {submittingEdit ? 'Updating...' : 'Update'}
                   </button>
                   <button
+                    type="button"
                     onClick={() => setEditingReview(null)}
                     className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600"
                   >
@@ -343,7 +412,7 @@ function Review({ itemId }) {
                 </div>
               </div>
             )}
-            {replyingTo === review.id && (
+            {replyingTo === review.id && user && user.role === 'seller' && user.id === item?.user_id && (
               <div className="mt-3 p-3 border rounded bg-white">
                 <textarea
                   value={replyText}
@@ -355,9 +424,10 @@ function Review({ itemId }) {
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => handleReply(review.id)}
-                    className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                    disabled={submittingReply}
+                    className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 disabled:opacity-50"
                   >
-                    {review.reply ? 'Update Reply' : 'Submit Reply'}
+                    {submittingReply ? 'Submitting...' : (review.reply ? 'Update Reply' : 'Submit Reply')}
                   </button>
                   <button
                     onClick={() => { setReplyingTo(null); setReplyText(''); }}

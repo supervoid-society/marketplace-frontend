@@ -72,7 +72,7 @@ function CatalogDetail() {
   );
 
   return (
-    <div className={`min-h-screen pt-24 py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
+    <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
       <div className="max-w-7xl mx-auto">
         <Link to="/catalog" className={`inline-block mb-6 px-4 py-2 rounded-lg transition-colors duration-200 ${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}>
           ← Kembali ke Katalog

@@ -207,35 +207,6 @@ function Checkout() {
     
     doc.save("struk-belanja.pdf");
     
-    // Process checkout
-    try {
-      const checkoutRes = await fetch(`${CRUD_URL}/catalog-items/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      
-      if (!checkoutRes.ok) {
-        const errorData = await checkoutRes.json();
-        Swal.fire({
-          icon: 'error',
-          title: 'Checkout Gagal',
-          text: errorData.error || 'Terjadi kesalahan saat checkout',
-        });
-        return;
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Terjadi kesalahan saat checkout',
-      });
-      return;
-    }
-    
     // Clear cart after successful checkout
     await clearCart();
     // Dispatch event to refresh balance
@@ -257,7 +228,7 @@ function Checkout() {
   }
 
   return (
-    <div className={`min-h-screen pt-24 py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
+    <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Struk Pembelian</h1>
