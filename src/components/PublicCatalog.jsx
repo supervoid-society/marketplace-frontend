@@ -74,7 +74,7 @@ function PublicCatalog() {
             Temukan berbagai produk berkualitas dengan harga terbaik
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 place-items-center">
+        <div className="grid grid-cols-[repeat(auto-fit,_320px)] justify-center gap-10">
           {catalog.length === 0 ? (
             <div className="col-span-full text-center py-16">
               <div className={`backdrop-blur-sm rounded-2xl p-8 shadow-lg max-w-md mx-auto border ${isDark ? 'bg-gray-900/80 border-gray-800' : 'bg-white/80 border-gray-200'}`}>

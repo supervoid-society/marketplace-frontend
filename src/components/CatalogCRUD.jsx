@@ -71,7 +71,7 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 place-items-center mt-4 sm:mt-24">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 justify-items-center mt-4 sm:mt-24">
         {catalog.map((item) => (
           <div key={item.id} className={`p-3 sm:p-4 lg:p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 w-80 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
             {item.image_id && (
