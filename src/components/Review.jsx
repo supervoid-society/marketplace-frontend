@@ -368,9 +368,9 @@ function Review({ itemId }) {
               </button>
             )}
             {editingReview === review.id && user && user.role === 'buyer' && user.id === review.buyer_id && (
-              <div className="mt-3 p-3 border rounded bg-white">
+              <div className={`mt-3 p-3 border rounded bg-white ${isDark ? 'border-gray-900' : 'border-gray-300'}`}>
                 <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1">Rating:</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Rating:</label>
                   <div className="flex">
                     {[1,2,3,4,5].map(num => (
                       <button
@@ -385,11 +385,11 @@ function Review({ itemId }) {
                   </div>
                 </div>
                 <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1">Comment:</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Comment:</label>
                   <textarea
                     value={editReview.comment}
                     onChange={(e) => setEditReview({...editReview, comment: e.target.value})}
-                    className="w-full p-2 border rounded text-sm"
+                    className={`w-full p-2 border rounded text-sm bg-white text-gray-900 ${isDark ? 'border-gray-900' : 'border-gray-300'}`}
                     rows="3"
                   />
                 </div>
@@ -413,11 +413,11 @@ function Review({ itemId }) {
               </div>
             )}
             {replyingTo === review.id && user && user.role === 'seller' && user.id === item?.user_id && (
-              <div className="mt-3 p-3 border rounded bg-white">
+              <div className={`mt-3 p-3 border rounded bg-white ${isDark ? 'border-gray-900' : 'border-gray-300'}`}>
                 <textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  className="w-full p-2 border rounded text-sm"
+                  className={`w-full p-2 border rounded text-sm bg-white text-gray-900 ${isDark ? 'border-gray-900' : 'border-gray-300'}`}
                   rows="3"
                   placeholder={review.reply ? "Edit your reply..." : "Write your reply..."}
                 />
