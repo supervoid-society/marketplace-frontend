@@ -9,9 +9,5 @@
   },
   "observability": {
     "enabled": true,
-  },
-  "vars": {
-    "VITE_AUTH_SERVICE_URL": "https://auth-services.ahmenglabs.workers.dev",
-    "VITE_CRUD_SERVICE_URL": "https://crud-services.ahmenglabs.workers.dev"
   }
 }
