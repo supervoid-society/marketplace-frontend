@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
 
 const CartContext = createContext();
 
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 };
@@ -21,7 +21,7 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     const token = getAuthToken();
     const userRole = getUserRole();
-    if (token && userRole === 'buyer') {
+    if (token && userRole === "buyer") {
       fetchCart();
     } else {
       setCart([]);
@@ -33,27 +33,27 @@ export const CartProvider = ({ children }) => {
     const handleStorageChange = () => {
       const token = getAuthToken();
       const userRole = getUserRole();
-      if (token && userRole === 'buyer') {
+      if (token && userRole === "buyer") {
         fetchCart();
       } else {
         setCart([]);
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const fetchCart = async () => {
     const token = getAuthToken();
     const userRole = getUserRole();
-    if (!token || userRole !== 'buyer') return;
+    if (!token || userRole !== "buyer") return;
 
     try {
       const response = await fetch(`${CRUD_URL}/catalog-items/cart`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (response.ok) {
@@ -61,7 +61,7 @@ export const CartProvider = ({ children }) => {
         setCart(cartData);
       }
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      console.error("Error fetching cart:", error);
     }
   };
 
@@ -69,7 +69,7 @@ export const CartProvider = ({ children }) => {
     const token = getAuthToken();
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return payload.role;
     } catch {
       return null;
@@ -79,26 +79,26 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (item, quantity = 1) => {
     const token = getAuthToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error("Authentication required");
     }
 
     const userRole = getUserRole();
-    if (userRole !== 'buyer') {
-      throw new Error('Only buyers can add items to cart');
+    if (userRole !== "buyer") {
+      throw new Error("Only buyers can add items to cart");
     }
 
     const response = await fetch(`${CRUD_URL}/catalog-items/cart`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ itemId: item.id, quantity })
+      body: JSON.stringify({ itemId: item.id, quantity }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to add item to cart');
+      throw new Error(error.error || "Failed to add item to cart");
     }
 
     // Refresh cart after adding
@@ -108,82 +108,82 @@ export const CartProvider = ({ children }) => {
   const updateCartItem = async (itemId, quantity) => {
     const token = getAuthToken();
     const userRole = getUserRole();
-    if (!token || userRole !== 'buyer') return;
+    if (!token || userRole !== "buyer") return;
 
     const response = await fetch(`${CRUD_URL}/catalog-items/cart/${itemId}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ quantity })
+      body: JSON.stringify({ quantity }),
     });
 
     if (response.ok) {
       await fetchCart();
     } else {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to update cart');
+      throw new Error(error.error || "Failed to update cart");
     }
   };
 
   const removeFromCart = async (itemId) => {
     const token = getAuthToken();
     const userRole = getUserRole();
-    if (!token || userRole !== 'buyer') return;
+    if (!token || userRole !== "buyer") return;
 
     const response = await fetch(`${CRUD_URL}/catalog-items/cart/${itemId}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (response.ok) {
       await fetchCart();
     } else {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to remove item from cart');
+      throw new Error(error.error || "Failed to remove item from cart");
     }
   };
 
   const clearCart = async () => {
     const token = getAuthToken();
     const userRole = getUserRole();
-    if (!token || userRole !== 'buyer') return;
+    if (!token || userRole !== "buyer") return;
 
     const response = await fetch(`${CRUD_URL}/catalog-items/cart`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (response.ok) {
       setCart([]);
     } else {
       const error = await response.json();
-      throw new Error(error.error || 'Failed to clear cart');
+      throw new Error(error.error || "Failed to clear cart");
     }
   };
 
   const checkout = async () => {
     const token = getAuthToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error("Authentication required");
     }
 
     const response = await fetch(`${CRUD_URL}/catalog-items/checkout`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || 'Checkout failed');
+      throw new Error(error.error || "Checkout failed");
     }
 
     // Clear cart after successful checkout
@@ -198,12 +198,8 @@ export const CartProvider = ({ children }) => {
     removeFromCart,
     clearCart,
     checkout,
-    refreshCart: fetchCart
+    refreshCart: fetchCart,
   };
 
-  return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

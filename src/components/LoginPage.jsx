@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function LoginPage() {
   const { isDark } = useTheme();
@@ -24,9 +24,9 @@ function LoginPage() {
         navigate("/catalog");
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Login Gagal',
-          text: 'Login failed',
+          icon: "error",
+          title: "Login Gagal",
+          text: "Login failed",
         });
       }
     } catch (error) {
@@ -35,62 +35,58 @@ function LoginPage() {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-4 transition-all duration-200 ${isDark ? 'bg-black' : 'bg-white'}`}>
-        <div className={`backdrop-blur-md p-8 rounded-3xl shadow-2xl max-w-md w-full border transition-all duration-200 ${isDark ? 'bg-black/80 border-gray-900' : 'bg-white/80 border-gray-200'}`}>
-          <div className="text-center mb-6">
-            <h2 className={`text-3xl font-bold mb-2 transition-all duration-200 ${isDark ? 'text-white' : 'text-gray-800'}`}>Login</h2>
-            <p className={`transition-all duration-200 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Masuk ke akun Anda</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className={`block text-sm font-medium mb-2 transition-all duration-200 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Username</label>
-              <input
-                type="text"
-                placeholder="Masukkan username"
-                value={loginForm.username}
-                onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                className={`w-full p-4 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
-                  isDark
-                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-gray-500 focus:border-gray-500'
-                    : 'border-gray-300 bg-white/50 text-black placeholder-gray-500 focus:ring-gray-500 focus:border-gray-500'
-                }`}
-                required
-              />
-            </div>
-            <div>
-              <label className={`block text-sm font-medium mb-2 transition-all duration-200 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Password</label>
-              <input
-                type="password"
-                placeholder="Masukkan password"
-                value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                className={`w-full p-4 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
-                  isDark
-                    ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:ring-gray-500 focus:border-gray-500'
-                    : 'border-gray-300 bg-white/50 text-black placeholder-gray-500 focus:ring-gray-500 focus:border-gray-500'
-                }`}
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className={`w-full py-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg font-semibold text-lg ${isDark ? 'bg-gray-600 text-white hover:bg-gray-500' : 'bg-gray-800 text-white hover:bg-gray-900'}`}
-            >
-              Masuk
-            </button>
-          </form>
-          <div className="text-center mt-6 space-y-2">
-            <p className={`text-sm transition-all duration-200 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Belum punya akun?{" "}
-              <Link to="/register-buyer" className={`font-medium hover:underline ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-800 hover:text-black'}`}>
-                Daftar sekarang
-              </Link>
-            </p>
-            <Link to="/" className={`text-sm transition-all duration-200 ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'}`}>
-              ← Kembali ke Beranda
-            </Link>
-          </div>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6">
+      <div className={`p-8 md:p-12 rounded-none border transition-all duration-200 max-w-md w-full ${isDark ? "bg-zinc-950 border-zinc-900" : "bg-white border-zinc-100"}`}>
+        <div className="mb-12">
+          <h2 className="text-5xl font-serif italic mb-4">Login.</h2>
+          <p className={`text-xs uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-300"}`}>Access your account</p>
         </div>
+        <form onSubmit={handleLogin} className="space-y-8">
+          <div>
+            <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Username</label>
+            <input
+              type="text"
+              placeholder="Username"
+              value={loginForm.username}
+              onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+              className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${
+                isDark ? "border-zinc-800 text-white placeholder-zinc-700 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-300 focus:border-black"
+              }`}
+              required
+            />
+          </div>
+          <div>
+            <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Password</label>
+            <input
+              type="password"
+              placeholder="Password"
+              value={loginForm.password}
+              onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+              className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${
+                isDark ? "border-zinc-800 text-white placeholder-zinc-700 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-300 focus:border-black"
+              }`}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className={`w-full py-5 rounded-none transition-all duration-300 active:scale-95 font-bold text-[10px] uppercase tracking-[0.2em] border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+          >
+            Sign In
+          </button>
+        </form>
+        <div className="mt-12 space-y-4">
+          <p className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+            New here?{" "}
+            <Link to="/register-buyer" className={`underline underline-offset-4 ${isDark ? "text-zinc-100 hover:text-white" : "text-zinc-900 hover:text-black"}`}>
+              Create an account
+            </Link>
+          </p>
+          <Link to="/" className={`block text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-700 hover:text-zinc-500" : "text-zinc-300 hover:text-zinc-500"}`}>
+            ← Return Home
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

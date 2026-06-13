@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
 
 function TransactionHistory() {
   const { isDark } = useTheme();
@@ -19,7 +19,7 @@ function TransactionHistory() {
     try {
       const res = await fetch(`${CRUD_URL}/transactions/user`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       const data = await res.json();
@@ -32,66 +32,50 @@ function TransactionHistory() {
   };
 
   const formatRupiah = (angka) => {
-    return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${isDark ? 'border-white' : 'border-gray-900'}`}></div>
-      </div>
-    );
-  }
+  if (loading) return null;
 
   return (
-    <div className={`min-h-screen pt-24 p-6 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Histori Transaksi</h1>
-
-        {transactions.length === 0 ? (
-          <div className={`p-8 rounded-lg text-center ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-            <p className="text-lg">Belum ada transaksi</p>
-          </div>
-        ) : (
-          <div className={`rounded-lg shadow-md overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="overflow-x-auto">
-              <table className="w-full table-auto">
-                <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                  <tr>
-                    <th className="text-left p-4">ID Transaksi</th>
-                    <th className="text-left p-4">Item</th>
-                    <th className="text-left p-4">Jumlah</th>
-                    <th className="text-left p-4">Total</th>
-                    <th className="text-left p-4">Status</th>
-                    <th className="text-left p-4">Tanggal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((t) => (
-                    <tr key={t.id} className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <td className="p-4">#{t.id}</td>
-                      <td className="p-4">{t.item_id}</td>
-                      <td className="p-4">{t.quantity}</td>
-                      <td className="p-4 font-semibold">{formatRupiah(t.amount)}</td>
-                      <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          t.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          t.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {t.status === 'completed' ? 'Selesai' :
-                           t.status === 'pending' ? 'Pending' : 'Gagal'}
-                        </span>
-                      </td>
-                      <td className="p-4">{new Date(t.created_at).toLocaleDateString('id-ID')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+    <div className="py-12 px-6 max-w-6xl mx-auto">
+      <div className="mb-16">
+        <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">Archive.</h1>
+        <p className={`text-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Chronicle of your transactions.</p>
       </div>
+
+      {transactions.length === 0 ? (
+        <div className="text-center py-32 border border-dashed border-zinc-200 dark:border-zinc-800">
+          <h2 className="text-2xl font-serif italic opacity-40">No transactions recorded.</h2>
+        </div>
+      ) : (
+        <div className="border border-zinc-100 dark:border-zinc-900 space-y-px bg-zinc-100 dark:bg-zinc-900">
+          {transactions.map((t) => (
+            <div key={t.id} className={`p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+              <div className="flex gap-8">
+                <span className="text-[10px] font-black opacity-20 uppercase tracking-widest mt-1">ID / {t.id.slice(-6)}</span>
+                <div>
+                  <h2 className="text-xl font-serif tracking-tight mb-1">Acquisition #{t.id.slice(0, 8)}</h2>
+                  <p className={`text-[10px] uppercase tracking-[0.2em] font-bold ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                    {new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:items-end gap-2">
+                <span className="text-2xl font-medium tracking-tighter">{formatRupiah(t.amount)}</span>
+                <span
+                  className={`text-[10px] uppercase tracking-[0.3em] font-black ${
+                    t.status === "completed" ? "text-emerald-500" : t.status === "pending" ? "text-amber-500" : "text-rose-500"
+                  }`}
+                >
+                  {t.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,229 +1,231 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
+import React from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "../contexts/CartContext";
 
 const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMenuOpen, handleLogout }) => {
   const { cart } = useCart();
 
   const formatBalance = (amount) => {
-    if (amount >= 1000000000000) {
-      return `Rp ${(amount / 1000000000000).toFixed(1)} triliun`;
-    } else if (amount >= 1000000000) {
-      return `Rp ${(amount / 1000000000).toFixed(1)} miliar`;
-    } else if (amount >= 1000000) {
-      return `Rp ${(amount / 1000000).toFixed(1)} juta`;
-    } else {
-      return `Rp ${amount.toLocaleString('id-ID')}`;
-    }
+    if (amount >= 1000000000000) return `Rp ${(amount / 1000000000000).toFixed(1)}T`;
+    if (amount >= 1000000000) return `Rp ${(amount / 1000000000).toFixed(1)}B`;
+    if (amount >= 1000000) return `Rp ${(amount / 1000000).toFixed(1)}M`;
+    return `Rp ${amount.toLocaleString("id-ID")}`;
   };
+
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'} shadow-lg`}>
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${isDark ? "bg-zinc-950/90 border-zinc-800 text-zinc-50" : "bg-white/90 border-zinc-200 text-zinc-900"} backdrop-blur-md`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="text-xl font-bold">
+          <Link to="/" className="text-2xl font-serif font-medium tracking-tight italic">
             Ahmeng Marketplace.
           </Link>
 
           {/* Desktop Navbar */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/leaderboard" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
-              🏆 Leaderboard
-              <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+            <Link
+              to="/leaderboard"
+              className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+            >
+              Leaderboard
             </Link>
-            <Link to="/catalog" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
+            <Link
+              to="/catalog"
+              className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+            >
               Katalog
-              <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
             </Link>
-            {userRole === 'buyer' && (
-              <Link to="/cart" className={`relative font-medium group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
+            {userRole === "buyer" && (
+              <Link
+                to="/cart"
+                className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+              >
                 <span className="flex items-center">
-                  Keranjang
+                  Cart
                   {cart.length > 0 && (
-                    <span className="ml-2 bg-gray-600 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg">
+                    <span
+                      className={`ml-2 text-[10px] rounded-sm h-4 w-4 flex items-center justify-center font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100" : "bg-zinc-100 border-zinc-200 text-zinc-900"}`}
+                    >
                       {cart.length}
                     </span>
                   )}
                 </span>
-                <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
               </Link>
             )}
-            {token && (userRole === 'admin' || userRole === 'seller') && (
-              <Link to="/manage-catalog" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
-                Manage Catalog
-                <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+            {token && (userRole === "admin" || userRole === "seller") && (
+              <Link
+                to="/manage-catalog"
+                className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+              >
+                Manage
               </Link>
             )}
             {!token && (
-              <Link to="/login" className={`text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}>
+              <Link
+                to="/login"
+                className={`text-xs uppercase tracking-widest px-6 py-2.5 rounded-sm border transition-all duration-200 font-medium ${isDark ? "border-zinc-700 bg-transparent hover:bg-white hover:text-black" : "border-zinc-300 bg-transparent hover:bg-black hover:text-white"}`}
+              >
                 Login
               </Link>
             )}
-            {token && userRole === 'admin' && (
-              <Link to="/manage-users" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
-                Manage Users
-                <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+            {token && userRole === "admin" && (
+              <Link
+                to="/manage-users"
+                className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+              >
+                Users
               </Link>
             )}
-            {token && userRole === 'admin' && (
-              <Link to="/dashboard" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
-                Transaction Stats
-                <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+            {token && userRole === "admin" && (
+              <Link
+                to="/dashboard"
+                className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+              >
+                Stats
               </Link>
             )}
-            {token && (userRole === 'buyer' || userRole === 'seller') && (
-              <Link to="/transaction-history" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
-                Histori Transaksi
-                <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
+            {token && (userRole === "buyer" || userRole === "seller") && (
+              <Link
+                to="/transaction-history"
+                className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+              >
+                History
               </Link>
             )}
             {token && (
-              <Link to="/settings" className={`font-medium relative group transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}>
+              <Link
+                to="/settings"
+                className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+              >
                 Settings
-                <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${isDark ? 'bg-white' : 'bg-black'} group-hover:w-full`}></span>
               </Link>
             )}
-            {token && userRole !== 'admin' && (
-              <Link to="/mining" className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all duration-200 cursor-pointer ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                </svg>
+            {token && userRole !== "admin" && (
+              <div
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-sm border text-xs tracking-widest transition-all duration-200 ${isDark ? "bg-transparent border-zinc-800 text-zinc-400" : "bg-transparent border-zinc-200 text-zinc-600"}`}
+              >
                 <span className="font-medium">{formatBalance(balance)}</span>
-              </Link>
+              </div>
             )}
             <button
               onClick={toggleTheme}
-              className={`p-2 rounded-full transition-all duration-200 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-black'}`}
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className={`p-2 rounded-sm transition-all duration-200 ${isDark ? "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-50" : "hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900"}`}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {isDark ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
             </button>
             {token && (
               <button
                 onClick={handleLogout}
-                className={`text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105 shadow-lg font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
+                className={`text-xs uppercase tracking-widest px-6 py-2.5 rounded-sm border transition-all duration-200 font-medium ${isDark ? "border-zinc-700 bg-transparent hover:bg-white hover:text-black" : "border-zinc-300 bg-transparent hover:bg-black hover:text-white"}`}
               >
                 Logout
               </button>
             )}
           </div>
 
-          {/* Mobile Header */}
-          <div className="md:hidden flex items-center space-x-4">
+          {/* Mobile Header Buttons */}
+          <div className="md:hidden flex items-center space-x-2">
             <button
               onClick={toggleTheme}
-              className={`p-2 rounded-full transition-all duration-200 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-black'}`}
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className={`p-2 rounded-sm transition-all duration-200 ${isDark ? "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-50" : "hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900"}`}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {isDark ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
             </button>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className={`focus:outline-none transition-colors duration-200 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}
+              className={`p-2 rounded-sm transition-all duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-600 hover:text-zinc-900"}`}
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {menuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Dropdown */}
         {menuOpen && (
-          <div className={`md:hidden px-2 pt-2 pb-3 space-y-2 backdrop-blur-md border-t shadow-lg transition-colors duration-300 ${isDark ? 'bg-black/95 border-gray-900' : 'bg-white/95 border-gray-200'}`}>
-            <Link
-              to="/leaderboard"
-              className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              🏆 Leaderboard
-            </Link>
-            <Link
-              to="/catalog"
-              className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              Katalog
-            </Link>
-            {token && (userRole === 'admin' || userRole === 'seller') && (
+          <div
+            className={`md:hidden absolute top-16 left-0 right-0 p-8 space-y-6 backdrop-blur-xl border-b transition-colors duration-300 ${isDark ? "bg-zinc-950/95 border-zinc-800" : "bg-white/95 border-zinc-100"}`}
+          >
+            {[
+              { to: "/leaderboard", label: "Leaderboard" },
+              { to: "/catalog", label: "Katalog" },
+              ...(userRole === "buyer" ? [{ to: "/cart", label: `Cart ${cart.length > 0 ? `(${cart.length})` : ""}` }] : []),
+              ...(token && (userRole === "admin" || userRole === "seller") ? [{ to: "/manage-catalog", label: "Manage" }] : []),
+              ...(token && userRole === "admin"
+                ? [
+                    { to: "/dashboard", label: "Stats" },
+                    { to: "/manage-users", label: "Users" },
+                  ]
+                : []),
+              ...(token && (userRole === "buyer" || userRole === "seller") ? [{ to: "/transaction-history", label: "History" }] : []),
+              ...(token ? [{ to: "/settings", label: "Settings" }] : []),
+            ].map((link) => (
               <Link
-                to="/manage-catalog"
-                className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
+                key={link.to}
+                to={link.to}
+                className={`block text-xs uppercase tracking-[0.2em] font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
                 onClick={() => setMenuOpen(false)}
               >
-                Manage Catalog
+                {link.label}
               </Link>
-            )}
-            {token && userRole === 'admin' && (
-              <Link
-                to="/dashboard"
-                className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-                onClick={() => setMenuOpen(false)}
+            ))}
+
+            {token && userRole !== "admin" && (
+              <div
+                className={`inline-block px-4 py-2 border text-[10px] uppercase tracking-widest font-black ${isDark ? "border-zinc-800 text-zinc-500" : "border-zinc-100 text-zinc-400"}`}
               >
-                Transaction Stats
-              </Link>
+                Balance / {formatBalance(balance)}
+              </div>
             )}
-            {token && (userRole === 'buyer' || userRole === 'seller') && (
-              <Link
-                to="/transaction-history"
-                className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                Histori Transaksi
-              </Link>
-            )}
-            {token && (
-              <Link
-                to="/settings"
-                className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                Settings
-              </Link>
-            )}
-            {token && userRole !== 'admin' && (
-              <Link
-                to="/mining"
-                className={`flex items-center space-x-2 px-4 py-3 rounded-lg border transition-all duration-200 ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                </svg>
-                <span className="font-medium">{formatBalance(balance)}</span>
-              </Link>
-            )}
-            {token && (
+
+            {token ? (
               <button
-                onClick={() => { handleLogout(); setMenuOpen(false); }}
-                className={`block w-full text-left px-4 py-3 text-white rounded-lg transition-all duration-200 font-medium ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'}`}
+                onClick={() => {
+                  handleLogout();
+                  setMenuOpen(false);
+                }}
+                className={`block w-full py-4 text-xs uppercase tracking-widest border transition-all duration-300 font-bold ${isDark ? "border-zinc-800 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50" : "border-zinc-100 text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"}`}
               >
                 Logout
               </button>
-            )}
-            {!token && (
+            ) : (
               <Link
                 to="/login"
-                className={`block px-4 py-3 transition-all duration-200 font-medium rounded-lg ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-900' : 'text-gray-700 hover:text-black hover:bg-gray-50'}`}
+                className={`block w-full text-center py-4 text-xs uppercase tracking-widest border transition-all duration-300 font-bold ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100" : "bg-zinc-900 text-white border-zinc-900"}`}
                 onClick={() => setMenuOpen(false)}
               >
                 Login

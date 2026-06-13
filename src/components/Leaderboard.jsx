@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function Leaderboard() {
   const { isDark } = useTheme();
@@ -9,15 +9,10 @@ function Leaderboard() {
   const [loading, setLoading] = useState(true);
 
   const formatBalance = (amount) => {
-    if (amount >= 1000000000000) {
-      return `Rp ${(amount / 1000000000000).toFixed(1)} triliun`;
-    } else if (amount >= 1000000000) {
-      return `Rp ${(amount / 1000000000).toFixed(1)} miliar`;
-    } else if (amount >= 1000000) {
-      return `Rp ${(amount / 1000000).toFixed(1)} juta`;
-    } else {
-      return `Rp ${amount.toLocaleString('id-ID')}`;
-    }
+    if (amount >= 1000000000000) return `Rp ${(amount / 1000000000000).toFixed(1)}T`;
+    if (amount >= 1000000000) return `Rp ${(amount / 1000000000).toFixed(1)}B`;
+    if (amount >= 1000000) return `Rp ${(amount / 1000000).toFixed(1)}M`;
+    return `Rp ${amount.toLocaleString("en-GB")}`;
   };
 
   useEffect(() => {
@@ -30,109 +25,51 @@ function Leaderboard() {
       const data = await res.json();
       setLeaderboard(data);
     } catch (error) {
-      console.error("Error fetching leaderboard:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen pt-24 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-4">Loading leaderboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return null;
 
   return (
-    <div className="min-h-screen pt-24 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>🏆 Leaderboard</h1>
-          <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Top users by balance</p>
+    <div className="py-8 px-4 md:px-6 max-w-4xl mx-auto">
+      <div className="mb-20 text-center">
+        <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">Elite.</h1>
+        <p className={`text-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>The market's most influential participants.</p>
+      </div>
+
+      <div className="border border-zinc-100 dark:border-zinc-900 bg-zinc-100 dark:bg-zinc-900 space-y-px">
+        <div className={`grid grid-cols-12 gap-2 md:gap-4 p-4 md:p-6 ${isDark ? "bg-zinc-900" : "bg-zinc-50"}`}>
+          <div className="col-span-2 text-[8px] md:text-[10px] uppercase tracking-widest font-black opacity-40">Rank</div>
+          <div className="col-span-6 md:col-span-5 text-[8px] md:text-[10px] uppercase tracking-widest font-black opacity-40">Username / Role</div>
+          <div className="col-span-4 md:col-span-5 text-right text-[8px] md:text-[10px] uppercase tracking-widest font-black opacity-40">Capitalization</div>
         </div>
 
-        <div className={`rounded-lg shadow-lg overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`px-6 py-4 border-b ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-            <div className={`grid grid-cols-4 gap-4 font-semibold text-sm ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-              <div>Rank</div>
-              <div>Username</div>
-              <div>Role</div>
-              <div className="text-right">Balance</div>
-            </div>
+        {leaderboard.length === 0 ? (
+          <div className={`p-12 text-center ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+            <p className="text-sm italic opacity-40">No entries found in the ledger.</p>
           </div>
-
-          <div className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
-            {leaderboard.map((user, index) => (
-              <div
-                key={index}
-                className={`px-6 py-4 transition-colors ${
-                  isDark
-                    ? index < 3
-                      ? index === 0
-                        ? 'bg-yellow-900/20 border-l-4 border-yellow-400 hover:bg-yellow-900/30'
-                        : index === 1
-                        ? 'bg-gray-700/50 border-l-4 border-gray-400 hover:bg-gray-700/70'
-                        : 'bg-orange-900/20 border-l-4 border-orange-400 hover:bg-orange-900/30'
-                      : 'hover:bg-gray-700/50'
-                    : index < 3
-                    ? index === 0
-                      ? 'bg-yellow-50 border-l-4 border-yellow-400 hover:bg-yellow-100'
-                      : index === 1
-                      ? 'bg-gray-50 border-l-4 border-gray-400 hover:bg-gray-100'
-                      : 'bg-orange-50 border-l-4 border-orange-400 hover:bg-orange-100'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <div className="grid grid-cols-4 gap-4 items-center">
-                  <div className="flex items-center">
-                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                      index === 0
-                        ? 'bg-yellow-400 text-yellow-900'
-                        : index === 1
-                        ? 'bg-gray-400 text-gray-900'
-                        : index === 2
-                        ? 'bg-orange-400 text-orange-900'
-                        : isDark
-                        ? 'bg-gray-700 text-gray-200'
-                        : 'bg-gray-200 text-gray-700'
-                    }`}>
-                      {index + 1}
-                    </span>
-                  </div>
-                  <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{user.username}</div>
-                  <div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.role === 'seller'
-                        ? isDark
-                          ? 'bg-blue-900/50 text-blue-300 border border-blue-700'
-                          : 'bg-blue-100 text-blue-800'
-                        : isDark
-                        ? 'bg-green-900/50 text-green-300 border border-green-700'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </div>
-                  <div className={`text-right font-semibold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                    {formatBalance(user.balance)}
-                  </div>
-                </div>
+        ) : (
+          leaderboard.map((user, index) => (
+            <div
+              key={index}
+              className={`grid grid-cols-12 gap-2 md:gap-4 p-4 md:p-8 items-center transition-colors group ${isDark ? "bg-zinc-950 hover:bg-zinc-900" : "bg-white hover:bg-zinc-50"}`}
+            >
+              <div className="col-span-2">
+                <span className={`text-xl md:text-3xl font-serif ${index < 3 ? "italic font-bold" : "opacity-20"}`}>{String(index + 1).padStart(2, "0")}</span>
               </div>
-            ))}
-          </div>
-
-          {leaderboard.length === 0 && (
-            <div className={`px-6 py-12 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              <p>No users found</p>
+              <div className="col-span-6 md:col-span-5">
+                <h3 className="text-sm md:text-xl font-serif tracking-tight mb-1 truncate">{user.username}</h3>
+                <span className={`text-[8px] md:text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{user.role}</span>
+              </div>
+              <div className="col-span-4 md:col-span-5 text-right">
+                <p className="text-sm md:text-2xl font-black tracking-tighter">{formatBalance(user.balance)}</p>
+              </div>
             </div>
-          )}
-        </div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -5,87 +5,83 @@ function LandingPage() {
   const { isDark } = useTheme();
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
+    <div>
       {/* Hero Section */}
-      <div className={`relative overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
-        <div className={`absolute inset-0 ${isDark ? 'bg-black opacity-30' : ''}`}></div>
-        <div className={`relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center ${isDark ? 'text-white' : 'text-black'}`}>
-          <h1 className={`text-5xl md:text-7xl font-bold mb-6 animate-fade-in ${isDark ? 'text-white' : 'text-black'}`}>
-            Ahmeng Marketplace.
-          </h1>
-          <p className={`text-xl md:text-2xl mb-8 max-w-2xl animate-fade-in-delay ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-            Temukan produk terbaik dengan harga terjangkau. Belanja mudah, cepat, dan aman.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-delay-2">
-            <Link
-              to="/catalog"
-              className={`px-8 py-4 rounded-full font-semibold text-lg hover:scale-105 transition duration-300 shadow-lg ${isDark ? 'bg-white text-gray-900 hover:bg-gray-100' : 'bg-black text-white hover:bg-gray-800'}`}
-            >
-              Mulai Belanja
-            </Link>
-            <Link
-              to="/cart"
-              className={`border-2 px-8 py-4 rounded-full font-semibold text-lg hover:scale-105 transition duration-300 ${isDark ? 'border-white text-white hover:bg-white hover:text-gray-900' : 'border-black text-black hover:bg-black hover:text-white'}`}
-            >
-              Lihat Keranjang
-            </Link>
+      <div className="relative overflow-hidden pt-12 md:pt-20 pb-24 md:pb-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col items-start text-left">
+            <h1 className="text-5xl sm:text-7xl md:text-[10rem] font-serif font-medium leading-[0.85] mb-12 tracking-tighter animate-fade-in">
+              The Art of <br />
+              <span className="italic">Curation.</span>
+            </h1>
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between w-full gap-12">
+              <p className={`text-xl md:text-2xl max-w-lg leading-relaxed animate-fade-in-delay ${isDark ? "text-zinc-300" : "text-zinc-800"}`}>
+                Ahmeng Marketplace defines the new standard for digital commerce. Curated, refined, and effortlessly simple.
+              </p>
+              <div className="flex gap-4 animate-fade-in-delay-2">
+                <Link
+                  to="/catalog"
+                  className={`px-8 md:px-10 py-4 md:py-5 rounded-sm font-sans text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold transition-all duration-300 active:scale-95 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+                >
+                  Explore Collection
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
-        <div className={`absolute bottom-0 left-0 right-0 h-32 ${isDark ? 'bg-gradient-to-t from-black to-transparent' : 'bg-gradient-to-t from-white to-transparent'}`}></div>
       </div>
 
-      {/* Features Section */}
-      <div className={`py-16 px-4 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-white'}`}>
-        <div className="max-w-6xl mx-auto">
-          <h2 className={`text-4xl font-bold text-center mb-12 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            Mengapa Memilih Kami?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className={`text-center p-6 rounded-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2 ${isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-50 hover:bg-gray-100'}`}>
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-gray-600' : 'bg-gray-200'}`}>
-                <svg className={`w-8 h-8 ${isDark ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+      {/* Features Section (Editorial Bento) */}
+      <div className={`py-24 md:py-32 px-6 border-t ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-baseline mb-16 md:mb-20 gap-8">
+            <h2 className="text-4xl font-serif italic">The Standards</h2>
+            <p className={`text-[10px] uppercase tracking-[0.3em] font-bold ${isDark ? "text-zinc-600" : "text-zinc-300"}`}>Integrity / Quality / Speed</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+            {/* Box 1 */}
+            <div className={`md:col-span-2 p-8 md:p-12 flex flex-col justify-between h-[350px] md:h-[450px] ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+              <span className="text-4xl md:text-5xl font-serif">01</span>
+              <div>
+                <h3 className="text-2xl font-serif mb-4">Precision</h3>
+                <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                  Every transaction is handled with absolute precision and cryptographic security.
+                </p>
               </div>
-              <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Cepat & Mudah</h3>
-              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Proses belanja yang simpel dan cepat tanpa ribet.</p>
             </div>
-            <div className={`text-center p-6 rounded-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2 ${isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-50 hover:bg-gray-100'}`}>
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-gray-600' : 'bg-gray-200'}`}>
-                <svg className={`w-8 h-8 ${isDark ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            {/* Box 2 */}
+            <div className={`p-8 md:p-12 flex flex-col justify-between h-[350px] md:h-[450px] ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+              <span className="text-4xl md:text-5xl font-serif italic text-zinc-400">02</span>
+              <div>
+                <h3 className="text-2xl font-serif mb-4">Trust</h3>
+                <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Verified sellers only. We maintain a high bar for our community.</p>
               </div>
-              <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Aman & Terpercaya</h3>
-              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Transaksi yang aman dengan sistem keamanan terbaik.</p>
             </div>
-            <div className={`text-center p-6 rounded-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2 ${isDark ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-50 hover:bg-gray-100'}`}>
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-gray-600' : 'bg-gray-200'}`}>
-                <svg className={`w-8 h-8 ${isDark ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
+            {/* Box 3 */}
+            <div className={`p-8 md:p-12 flex flex-col justify-between h-[350px] md:h-[450px] ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+              <span className="text-4xl md:text-5xl font-serif italic text-zinc-400">03</span>
+              <div>
+                <h3 className="text-2xl font-serif mb-4">Velocity</h3>
+                <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Zero-latency commerce. Fast delivery, faster payments.</p>
               </div>
-              <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Harga Terbaik</h3>
-              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Produk berkualitas dengan harga yang kompetitif.</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* CTA Section */}
-      <div className={`py-16 px-4 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-white'}`}>
+      <div className={`py-32 md:py-40 px-6 border-t ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className={`text-4xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            Siap Mulai Belanja?
+          <h2 className="text-5xl md:text-8xl font-serif mb-12 tracking-tight">
+            Begin your <br />
+            <span className="italic">journey.</span>
           </h2>
-          <p className={`text-xl mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            Jelajahi katalog produk kami dan temukan yang Anda butuhkan.
-          </p>
           <Link
             to="/catalog"
-            className={`px-10 py-4 rounded-full font-semibold text-lg hover:scale-105 transition duration-300 shadow-lg inline-block ${isDark ? 'bg-gray-600 text-white hover:bg-gray-500' : 'bg-gray-800 text-white hover:bg-gray-900'}`}
+            className={`inline-block px-10 md:px-12 py-5 md:py-6 rounded-sm font-sans text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold transition-all duration-300 active:scale-95 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
           >
-            Lihat Katalog
+            Open Catalog
           </Link>
         </div>
       </div>

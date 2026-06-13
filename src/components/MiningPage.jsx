@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function MiningPage({ token }) {
   const { isDark } = useTheme();
@@ -25,16 +25,14 @@ function MiningPage({ token }) {
   const validityCheckRef = useRef(null);
 
   const formatRupiah = (angka) => {
-    return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   const checkTaskValidity = async () => {
     if (!challenge) return true;
     try {
       const res = await fetch(`${AUTH_URL}/auth/task/${challenge}/valid`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       return data.valid;
@@ -46,287 +44,197 @@ function MiningPage({ token }) {
   const fetchSolvedHistory = useCallback(async () => {
     try {
       const res = await fetch(`${AUTH_URL}/auth/solved-history`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (res.ok) {
-        setSolvedHistory(data);
-      }
+      if (res.ok) setSolvedHistory(data);
     } catch (error) {
-      console.error("Error fetching solved history");
+      console.error(error);
     }
   }, [token]);
 
   const getTask = useCallback(async () => {
     try {
       const res = await fetch(`${AUTH_URL}/auth/task`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (res.ok) {
         setChallenge(data.challenge);
         setNonce("");
         setMessage("");
-        // Don't reset attempts and hashrate here, keep cumulative
       } else {
-        setMessage(data.error || "Failed to get task");
+        setMessage(data.error || "Task failure");
       }
     } catch (error) {
-      setMessage("Error fetching task");
+      setMessage("Task failure");
     }
   }, [token]);
 
-  const submitTask = useCallback(async (foundNonce) => {
-    try {
-      const res = await fetch(`${AUTH_URL}/auth/submit-task`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ challenge, nonce: foundNonce, difficulty }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("Task solved! Balance increased by Rp 100.000");
-        // Refresh balance
-        window.dispatchEvent(new CustomEvent('balanceChanged'));
-        // Get new task
-        setTimeout(getTask, 2000);
-        // Refresh history
-        fetchSolvedHistory();
-      } else {
-        if (data.error === "Task already solved") {
-          setMessage("Task was already solved by another user. Getting new task...");
+  const submitTask = useCallback(
+    async (foundNonce) => {
+      try {
+        const res = await fetch(`${AUTH_URL}/auth/submit-task`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ challenge, nonce: foundNonce, difficulty }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setMessage("Task resolved / System balance updated.");
+          window.dispatchEvent(new CustomEvent("balanceChanged"));
           setTimeout(getTask, 2000);
+          fetchSolvedHistory();
         } else {
-          setMessage(data.error || "Failed to submit task");
+          setMessage(data.error === "Task already solved" ? "Collision detected / Fetching new task..." : data.error);
+          if (data.error === "Task already solved") setTimeout(getTask, 2000);
         }
+      } catch (error) {
+        setMessage("Verification failure");
       }
-    } catch (error) {
-      setMessage("Error submitting task");
-    }
-  }, [challenge, difficulty, token, getTask, fetchSolvedHistory]);
+    },
+    [challenge, difficulty, token, getTask, fetchSolvedHistory]
+  );
 
-  const startWorker = useCallback((challenge, difficulty) => {
-    if (workerRef.current) {
-      workerRef.current.terminate();
-    }
-    workerRef.current = new Worker(new URL('../workers/miner.js', import.meta.url), { type: 'module' });
-    workerRef.current.postMessage({ challenge, difficulty });
-
-    workerRef.current.onmessage = (e) => {
-      const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
-      if (type === 'found') {
-        setNonce(foundNonce);
-        submitTask(foundNonce);
-      } else if (type === 'progress') {
-        attemptsRef.current = workerAttempts;
-        setAttempts(workerAttempts);
-        const elapsed = (Date.now() - startTimeRef.current) / 1000;
-        setHashrate(Math.floor(workerAttempts / elapsed));
-      }
-    };
-  }, [submitTask]);
+  const startWorker = useCallback(
+    (challenge, difficulty) => {
+      if (workerRef.current) workerRef.current.terminate();
+      workerRef.current = new Worker(new URL("../workers/miner.js", import.meta.url), { type: "module" });
+      workerRef.current.postMessage({ challenge, difficulty });
+      workerRef.current.onmessage = (e) => {
+        const { type, nonce: foundNonce, attempts: workerAttempts } = e.data;
+        if (type === "found") {
+          setNonce(foundNonce);
+          submitTask(foundNonce);
+        } else if (type === "progress") {
+          attemptsRef.current = workerAttempts;
+          setAttempts(workerAttempts);
+          const elapsed = (Date.now() - startTimeRef.current) / 1000;
+          setHashrate(Math.floor(workerAttempts / elapsed));
+        }
+      };
+    },
+    [submitTask]
+  );
 
   const startMining = () => {
     if (!challenge) return;
-
     setIsMining(true);
     startTimeRef.current = Date.now();
     attemptsRef.current = 0;
-
-    // Start validity check every 5 seconds to switch to new task if current is solved
     validityCheckRef.current = setInterval(async () => {
       const isValid = await checkTaskValidity();
-      if (!isValid) {
-        getTask(); // Get new task without stopping mining
-      }
+      if (!isValid) getTask();
     }, 5000);
-
-    // Use Web Worker for mining
     startWorker(challenge, difficulty);
   };
 
   const stopMining = () => {
     setIsMining(false);
-    if (workerRef.current) {
-      workerRef.current.terminate();
-    }
-    if (validityCheckRef.current) {
-      clearInterval(validityCheckRef.current);
-    }
+    if (workerRef.current) workerRef.current.terminate();
+    if (validityCheckRef.current) clearInterval(validityCheckRef.current);
   };
 
   useEffect(() => {
     getTask();
     fetchSolvedHistory();
     return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-      }
-      if (validityCheckRef.current) {
-        clearInterval(validityCheckRef.current);
-      }
+      if (workerRef.current) workerRef.current.terminate();
+      if (validityCheckRef.current) clearInterval(validityCheckRef.current);
     };
-  }, [getTask]);
+  }, [getTask, fetchSolvedHistory]);
 
   useEffect(() => {
-    if (isMining && challenge) {
-      startWorker(challenge, difficulty);
-    }
+    if (isMining && challenge) startWorker(challenge, difficulty);
   }, [challenge, isMining, difficulty, startWorker]);
 
   return (
-    <div className="min-h-screen pt-24 p-6">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">Proof-of-Work Mining</h1>
+    <div className="py-8 px-4 md:px-6 max-w-4xl mx-auto">
+      <div className="mb-20">
+        <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">Forge.</h1>
+        <p className={`text-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Computational proof of work.</p>
+      </div>
 
-        <div className={`p-6 rounded-lg shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Current Task</h2>
-            <div className="space-y-2">
-              <p><strong>Challenge:</strong> {challenge}</p>
-              <p><strong>Difficulty:</strong> {difficulty * 4} leading zero bits ({difficulty} hex digits)</p>
-              <p><strong>Reward:</strong> {formatRupiah(100000)}</p>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Mining Stats</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className={`p-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <p className="text-sm text-gray-600">Hashrate</p>
-                <p className="text-2xl font-bold">{hashrate.toLocaleString()} H/s</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="lg:col-span-7 space-y-12">
+          <div className={`p-6 md:p-10 border ${isDark ? "bg-zinc-950 border-zinc-800" : "bg-zinc-50 border-zinc-100"}`}>
+            <h2 className="text-xs uppercase tracking-[0.4em] font-black mb-10">System Parameters</h2>
+            <div className="space-y-8">
+              <div>
+                <span className="block text-[10px] uppercase tracking-widest font-black opacity-40 mb-2">Challenge Hash</span>
+                <p className="font-mono text-xs break-all opacity-80">{challenge || "awaiting_task..."}</p>
               </div>
-              <div className={`p-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <p className="text-sm text-gray-600">Attempts</p>
-                <p className="text-2xl font-bold">{attempts.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <div className="flex justify-center">
-              <button
-                onClick={isMining ? stopMining : startMining}
-                className={`py-3 px-6 rounded-lg font-semibold transition duration-200 ${
-                  isMining
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
-              >
-                {isMining ? 'Stop Mining' : 'Start Mining'}
-              </button>
-            </div>
-          </div>
-
-          {message && (
-            <div className={`p-4 rounded ${message.includes('solved') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              {message}
-            </div>
-          )}
-        </div>
-
-        <div className={`mt-8 p-6 rounded-lg shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <h2 className="text-xl font-semibold mb-4">Mining History</h2>
-          <div className="max-h-64 overflow-y-auto">
-            {solvedHistory.length === 0 ? (
-              <p className="text-gray-500">No mining history yet.</p>
-            ) : (
-              solvedHistory.map((item, index) => (
-                <div key={index} className="text-sm mb-1 bg-green-100 text-green-800 p-2 rounded">
-                  [{dayjs.utc(item.solved_at).tz('Asia/Jakarta').format('DD/MM/YYYY HH:mm:ss')}]: Task solved! Balance increased by Rp 100.000
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <span className="block text-[10px] uppercase tracking-widest font-black opacity-40 mb-2">Complexity</span>
+                  <p className="text-2xl font-black tracking-tighter">{difficulty * 4} bits</p>
                 </div>
-              ))
-            )}
+                <div>
+                  <span className="block text-[10px] uppercase tracking-widest font-black opacity-40 mb-2">Allocation</span>
+                  <p className="text-2xl font-black tracking-tighter">{formatRupiah(100000)}</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={isMining ? stopMining : startMining}
+              className={`w-full mt-12 py-6 rounded-none font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-500 border ${
+                isMining
+                  ? "bg-rose-500 text-white border-rose-500 hover:bg-transparent hover:text-rose-500"
+                  : isDark
+                    ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
+                    : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
+              }`}
+            >
+              {isMining ? "Interrupt Process" : "Initialize Forge"}
+            </button>
+          </div>
+
+          <div className={`p-6 md:p-10 border ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
+            <h2 className="text-xs uppercase tracking-[0.4em] font-black mb-8">Metrics</h2>
+            <div className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <div className={`p-6 ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+                <span className="block text-[10px] uppercase tracking-widest font-bold opacity-40 mb-2">Hashrate</span>
+                <p className="text-2xl font-black tracking-tighter">{hashrate.toLocaleString()} H/s</p>
+              </div>
+              <div className={`p-6 ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+                <span className="block text-[10px] uppercase tracking-widest font-bold opacity-40 mb-2">Iterations</span>
+                <p className="text-2xl font-black tracking-tighter">{attempts.toLocaleString()}</p>
+              </div>
+            </div>
+            {message && <p className="mt-8 text-[10px] uppercase tracking-widest font-black text-center">{message}</p>}
           </div>
         </div>
 
-        <div className={`mt-8 p-6 rounded-lg shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <h2 className="text-xl font-semibold mb-4">Python Mining Script</h2>
-          <p className="mb-4 text-sm text-gray-600">Copy this script to Google Colab or your computer for more powerful mining:</p>
-          <pre className={`p-4 rounded text-xs overflow-x-auto ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
-{`import hashlib
-import requests
-import time
+        <div className="lg:col-span-5 space-y-8">
+          <div className={`p-8 border ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
+            <h2 className="text-xs uppercase tracking-[0.4em] font-black mb-6">Archive</h2>
+            <div className="max-h-[300px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+              {solvedHistory.length === 0 ? (
+                <p className="text-xs italic opacity-40">No records found.</p>
+              ) : (
+                solvedHistory.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center gap-4 py-3 border-b border-zinc-100 dark:border-zinc-900">
+                    <span className="text-[10px] font-bold opacity-40">{dayjs.utc(item.solved_at).format("HH:mm:ss")}</span>
+                    <span className="text-[10px] uppercase tracking-widest font-black text-emerald-500">Resolved</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
 
-# Your JWT Token
-TOKEN = "${token}"
-AUTH_URL = "${AUTH_URL}"
-
-def get_task():
-    headers = {"Authorization": f"Bearer {TOKEN}"}
-    response = requests.get(f"{AUTH_URL}/auth/task", headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print("Failed to get task:", response.json())
-        return None
-
-def submit_task(challenge, nonce, difficulty):
-    headers = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
-    data = {"challenge": challenge, "nonce": nonce, "difficulty": difficulty}
-    response = requests.post(f"{AUTH_URL}/auth/submit-task", json=data, headers=headers)
-    return response.json()
-
-def mine(challenge, difficulty):
-    target = '0' * difficulty
-    challenge_bytes = bytes.fromhex(challenge)
-    nonce = 0
-    start_time = time.time()
-    attempts = 0
-    
-    while True:
-        nonce_hex = hex(nonce)[2:]
-        if len(nonce_hex) % 2 != 0:
-            nonce_hex = '0' + nonce_hex
-        nonce_bytes = bytes.fromhex(nonce_hex)
-        data = challenge_bytes + nonce_bytes
-        hash_result = hashlib.sha256(data).hexdigest()
-        attempts += 1
-        
-        if hash_result.startswith(target):
-            return nonce_hex, attempts
-        
-        nonce += 1
-        
-        if attempts % 100000 == 0:
-            elapsed = time.time() - start_time
-            print(f"Attempts: {attempts}, Hashrate: {attempts / elapsed:.2f} H/s")
-
-def main():
-    while True:
-        print("Getting task...")
-        task = get_task()
-        if not task:
-            time.sleep(5)
-            continue
-            
-        challenge = task['challenge']
-        difficulty = task['difficulty']
-        print(f"Mining challenge: {challenge}, difficulty: {difficulty}")
-        
-        nonce, attempts = mine(challenge, difficulty)
-        print(f"Found nonce: {nonce} after {attempts} attempts")
-        
-        result = submit_task(challenge, nonce, difficulty)
-        print("Submit result:", result)
-        
-        if "solved" in str(result):
-            print("Task solved! Balance updated.")
-        else:
-            print("Failed to submit:", result)
-        
-        time.sleep(2)  # Wait before next task
-
-if __name__ == "__main__":
-    main()`}
-          </pre>
+          <div className={`p-8 border ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-100"}`}>
+            <h2 className="text-xs uppercase tracking-[0.4em] font-black mb-4">Direct Terminal</h2>
+            <p className="text-[10px] leading-relaxed opacity-60 mb-6">Interface for off-site computational clients.</p>
+            <pre className="text-[9px] font-mono p-4 bg-black text-zinc-500 overflow-x-auto border border-zinc-800">
+              {`# Auth Terminal Configuration
+TOKEN = "${token.slice(0, 12)}..."
+AUTH_URL = "${AUTH_URL}"`}
+            </pre>
+          </div>
         </div>
       </div>
     </div>

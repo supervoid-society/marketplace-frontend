@@ -24,7 +24,7 @@ import Navbar from "./components/Navbar";
 import { useTheme } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function App() {
   const { isDark, toggleTheme } = useTheme();
@@ -37,7 +37,7 @@ function App() {
   const getUserRole = (token) => {
     if (!token) return "";
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return payload.role || "";
     } catch (error) {
       console.error("Error decoding token:", error);
@@ -49,7 +49,7 @@ function App() {
   const getUserId = (token) => {
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return payload.userId || null;
     } catch {
       return null;
@@ -58,7 +58,7 @@ function App() {
 
   // Function to fetch balance
   const fetchBalance = async (userId, role) => {
-    if (!userId || !role || role === 'admin' || balanceFetched) return;
+    if (!userId || !role || role === "admin" || balanceFetched) return;
     try {
       setBalanceFetched(true);
       const res = await fetch(`${AUTH_URL}/auth/balance/${userId}/${role}`);
@@ -77,7 +77,7 @@ function App() {
     if (userId) {
       fetchBalance(userId, getUserRole(token));
     }
-    
+
     const handleStorageChange = () => {
       const currentToken = localStorage.getItem("token") || "";
       setToken(currentToken);
@@ -129,8 +129,17 @@ function App() {
   return (
     <CartProvider>
       <Router>
-        <div className={`min-h-screen pt-16 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
-          <Navbar token={token} userRole={userRole} balance={balance} isDark={isDark} toggleTheme={toggleTheme} menuOpen={menuOpen} setMenuOpen={setMenuOpen} handleLogout={handleLogout} />
+        <div className={`min-h-screen pt-16 transition-colors duration-300 ${isDark ? "bg-zinc-950 text-zinc-50" : "bg-white text-zinc-900"}`}>
+          <Navbar
+            token={token}
+            userRole={userRole}
+            balance={balance}
+            isDark={isDark}
+            toggleTheme={toggleTheme}
+            menuOpen={menuOpen}
+            setMenuOpen={setMenuOpen}
+            handleLogout={handleLogout}
+          />
 
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -140,18 +149,21 @@ function App() {
             <Route path="/catalog" element={<PublicCatalog />} />
             <Route path="/catalog/:id" element={<CatalogDetail />} />
             <Route path="/seller/:userId" element={<SellerPage />} />
-            <Route path="/cart" element={userRole === 'buyer' ? <Cart /> : <Navigate to="/" />} />
-            <Route path="/checkout" element={userRole === 'buyer' ? <Checkout /> : <Navigate to="/" />} />
-            <Route path="/dashboard" element={token && userRole === 'admin' ? <TransactionStats token={token} /> : <Navigate to="/" />} />
-            <Route path="/manage-catalog" element={token && (userRole === 'admin' || userRole === 'seller') ? <CatalogCRUD token={token} userRole={userRole} /> : <Navigate to="/" />} />
-            <Route path="/manage-catalog/add" element={token && (userRole === 'admin' || userRole === 'seller') ? <AddCatalogItem token={token} /> : <Navigate to="/" />} />
-            <Route path="/manage-catalog/:id" element={token && (userRole === 'admin' || userRole === 'seller') ? <EditCatalogItem token={token} /> : <Navigate to="/" />} />
-            <Route path="/manage-users" element={token && userRole === 'admin' ? <UserCRUD token={token} /> : <Navigate to="/" />} />
-            <Route path="/manage-users/add" element={token && userRole === 'admin' ? <AddUser token={token} /> : <Navigate to="/" />} />
-            <Route path="/manage-users/:id" element={token && userRole === 'admin' ? <EditUser token={token} /> : <Navigate to="/" />} />
+            <Route path="/cart" element={userRole === "buyer" ? <Cart /> : <Navigate to="/" />} />
+            <Route path="/checkout" element={userRole === "buyer" ? <Checkout /> : <Navigate to="/" />} />
+            <Route path="/dashboard" element={token && userRole === "admin" ? <TransactionStats token={token} /> : <Navigate to="/" />} />
+            <Route
+              path="/manage-catalog"
+              element={token && (userRole === "admin" || userRole === "seller") ? <CatalogCRUD token={token} userRole={userRole} /> : <Navigate to="/" />}
+            />
+            <Route path="/manage-catalog/add" element={token && (userRole === "admin" || userRole === "seller") ? <AddCatalogItem token={token} /> : <Navigate to="/" />} />
+            <Route path="/manage-catalog/:id" element={token && (userRole === "admin" || userRole === "seller") ? <EditCatalogItem token={token} /> : <Navigate to="/" />} />
+            <Route path="/manage-users" element={token && userRole === "admin" ? <UserCRUD token={token} /> : <Navigate to="/" />} />
+            <Route path="/manage-users/add" element={token && userRole === "admin" ? <AddUser token={token} /> : <Navigate to="/" />} />
+            <Route path="/manage-users/:id" element={token && userRole === "admin" ? <EditUser token={token} /> : <Navigate to="/" />} />
             <Route path="/settings" element={token ? <Settings token={token} userRole={userRole} /> : <Navigate to="/" />} />
-            <Route path="/transaction-history" element={token && (userRole === 'buyer' || userRole === 'seller') ? <TransactionHistory /> : <Navigate to="/" />} />
-            <Route path="/mining" element={token && (userRole === 'buyer' || userRole === 'seller') ? <MiningPage token={token} /> : <Navigate to="/" />} />
+            <Route path="/transaction-history" element={token && (userRole === "buyer" || userRole === "seller") ? <TransactionHistory /> : <Navigate to="/" />} />
+            <Route path="/mining" element={token && (userRole === "buyer" || userRole === "seller") ? <MiningPage token={token} /> : <Navigate to="/" />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
           </Routes>
         </div>

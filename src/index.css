@@ -1,9 +1,42 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Geist", sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-mono: "Geist Mono", monospace;
+
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+
+  --color-dark-bg: var(--color-zinc-950);
+  --color-dark-surface: var(--color-zinc-900);
+  --color-dark-text: var(--color-zinc-50);
+  --color-dark-text-secondary: var(--color-zinc-400);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -12,22 +45,15 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 1s ease-out;
+  animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-fade-in-delay {
-  animation: fadeIn 1s ease-out 0.5s both;
+  animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
 }
 
 .animate-fade-in-delay-2 {
-  animation: fadeIn 1s ease-out 1s both;
-}
-
-@theme {
-  --color-dark-bg: #0f0f0f;
-  --color-dark-surface: #1a1a1a;
-  --color-dark-text: #ffffff;
-  --color-dark-text-secondary: #a0a0a0;
+  animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
 }
 
 /* Dark mode styles */

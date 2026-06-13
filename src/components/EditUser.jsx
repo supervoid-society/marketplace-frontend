@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function EditUser({ token }) {
   const { id } = useParams();
@@ -19,23 +19,16 @@ function EditUser({ token }) {
   const fetchUser = async () => {
     try {
       const res = await fetch(`${AUTH_URL}/users/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const user = await res.json();
         setForm({ username: user.username, password: "" });
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Not Found',
-          text: 'User not found',
-        });
         navigate("/manage-users");
       }
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -45,71 +38,82 @@ function EditUser({ token }) {
     e.preventDefault();
     try {
       const updateData = { username: form.username };
-      if (form.password) {
-        updateData.password = form.password;
-      }
+      if (form.password) updateData.password = form.password;
       const res = await fetch(`${AUTH_URL}/users/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(updateData),
       });
       if (res.ok) {
         navigate("/manage-users");
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal',
-          text: 'Failed to update user',
-        });
+        Swal.fire({ icon: "error", title: "Update Failed" });
       }
     } catch (error) {
-      console.error("Update error:", error);
+      console.error(error);
     }
   };
 
-  if (loading) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>
-  );
+  if (loading) return null;
 
   return (
-    <div className={`min-h-screen pt-24 p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <div className={`max-w-md mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
-      <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit User</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
-          className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password (leave empty to keep current)"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-        />
-        <div className="flex gap-4">
-          <button type="submit" className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-500 transition duration-200 flex-1">
-            Update User
+    <div className="py-12 px-6 max-w-md mx-auto">
+      <Link
+        to="/manage-users"
+        className={`inline-flex items-center gap-2 mb-12 text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-200 ${isDark ? "text-zinc-500 hover:text-zinc-100" : "text-zinc-400 hover:text-zinc-900"}`}
+      >
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Audit
+      </Link>
+
+      <div className="mb-16 text-center">
+        <h1 className="text-5xl font-serif italic mb-4">Edit Profile.</h1>
+        <p className={`text-xs uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Modifying System Identity</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-12">
+        <div className="space-y-8">
+          <div>
+            <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Identity / Username</label>
+            <input
+              type="text"
+              placeholder="Identifier"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${isDark ? "border-zinc-800 text-white placeholder-zinc-800 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-200 focus:border-black"}`}
+              required
+            />
+          </div>
+          <div>
+            <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>New Credentials (Optional)</label>
+            <input
+              type="password"
+              placeholder="Reset Key"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${isDark ? "border-zinc-800 text-white placeholder-zinc-800 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-200 focus:border-black"}`}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <button
+            type="submit"
+            className={`w-full py-6 rounded-none text-[10px] uppercase tracking-[0.3em] font-black transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+          >
+            Commit Changes
           </button>
           <button
             type="button"
             onClick={() => navigate("/manage-users")}
-            className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-200 flex-1"
+            className={`w-full py-4 rounded-none text-[10px] uppercase tracking-[0.3em] font-black transition-all duration-300 border border-transparent ${isDark ? "text-zinc-500 hover:text-zinc-100" : "text-zinc-400 hover:text-zinc-900"}`}
           >
-            Cancel
+            Dismiss
           </button>
         </div>
       </form>
-    </div>
     </div>
   );
 }

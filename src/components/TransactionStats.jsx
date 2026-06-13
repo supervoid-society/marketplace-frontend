@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
 
 function TransactionStats({ token }) {
   const { isDark } = useTheme();
@@ -16,104 +16,79 @@ function TransactionStats({ token }) {
   const fetchTransactions = async () => {
     try {
       const res = await fetch(`${CRUD_URL}/transactions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setTransactions(data);
-
-      // Calculate stats
       const total = data.length;
-      const completed = data.filter(t => t.status === 'completed').length;
-      const pending = data.filter(t => t.status === 'pending').length;
-      const revenue = data.filter(t => t.status === 'completed').reduce((sum, t) => sum + t.amount, 0);
-
+      const completed = data.filter((t) => t.status === "completed").length;
+      const pending = data.filter((t) => t.status === "pending").length;
+      const revenue = data.filter((t) => t.status === "completed").reduce((sum, t) => sum + t.amount, 0);
       setStats({ total, completed, pending, revenue });
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatRupiah = (angka) => {
-    return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${isDark ? 'border-white' : 'border-gray-900'}`}></div>
-      </div>
-    );
-  }
+  if (loading) return null;
 
   return (
-    <div className="min-h-screen pt-24 p-6">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Transaction Statistics</h1>
-          <p className={`text-gray-600 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Overview of all marketplace transactions</p>
-        </header>
+    <div>
+      <div className="flex justify-between items-baseline mb-12">
+        <h2 className="text-4xl font-serif italic">Ledger Overview</h2>
+        <span className={`text-[10px] uppercase tracking-[0.3em] font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Market Statistics</span>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Transactions</h3>
-            <p className="text-3xl font-bold">{stats.total}</p>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 mb-16">
+        {[
+          { label: "Aggregate Count", value: stats.total },
+          { label: "Successful", value: stats.completed },
+          { label: "Processing", value: stats.pending },
+          { label: "Gross Revenue", value: formatRupiah(stats.revenue) },
+        ].map((s, i) => (
+          <div key={i} className={`p-8 ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+            <h3 className={`text-[10px] uppercase tracking-widest font-black mb-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{s.label}</h3>
+            <p className="text-2xl font-black tracking-tighter">{s.value}</p>
           </div>
-          <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Completed</h3>
-            <p className="text-3xl font-bold">{stats.completed}</p>
-          </div>
-          <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Pending</h3>
-            <p className="text-3xl font-bold">{stats.pending}</p>
-          </div>
-          <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Revenue</h3>
-            <p className="text-3xl font-bold">{formatRupiah(stats.revenue)}</p>
-          </div>
-        </div>
+        ))}
+      </div>
 
-        <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-          <h2 className="text-xl font-semibold mb-6">Transaction Details</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto">
-              <thead>
-                <tr className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
-                  <th className="text-left p-3 font-medium">Transaction ID</th>
-                  <th className="text-left p-3 font-medium">Buyer ID</th>
-                  <th className="text-left p-3 font-medium">Seller ID</th>
-                  <th className="text-left p-3 font-medium">Item ID</th>
-                  <th className="text-left p-3 font-medium">Amount</th>
-                  <th className="text-left p-3 font-medium">Status</th>
-                  <th className="text-left p-3 font-medium">Date</th>
+      <div className={`p-6 md:p-12 border ${isDark ? "bg-zinc-950 border-zinc-900" : "bg-white border-zinc-100"}`}>
+        <h3 className="text-xl font-serif italic mb-8">Transaction Logs</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className={`border-b ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
+                <th className="text-left py-4 text-[10px] uppercase tracking-widest font-black opacity-40 px-2">ID</th>
+                <th className="text-left py-4 text-[10px] uppercase tracking-widest font-black opacity-40 px-2">Entity</th>
+                <th className="text-left py-4 text-[10px] uppercase tracking-widest font-black opacity-40 px-2">Amount</th>
+                <th className="text-left py-4 text-[10px] uppercase tracking-widest font-black opacity-40 px-2">Status</th>
+                <th className="text-right py-4 text-[10px] uppercase tracking-widest font-black opacity-40 px-2">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
+              {transactions.map((t) => (
+                <tr key={t.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                  <td className="py-6 px-2 text-xs font-medium">#{t.id.slice(0, 8)}</td>
+                  <td className="py-6 px-2">
+                    <p className="text-[10px] uppercase tracking-widest font-bold">B: {t.buyer_id.slice(0, 6)}</p>
+                    <p className="text-[10px] uppercase tracking-widest font-bold">S: {t.seller_id.slice(0, 6)}</p>
+                  </td>
+                  <td className="py-6 px-2 text-sm font-black tracking-tight">{formatRupiah(t.amount)}</td>
+                  <td className="py-6 px-2">
+                    <span className={`text-[10px] uppercase tracking-widest font-black ${t.status === "completed" ? "text-emerald-500" : "text-amber-500"}`}>{t.status}</span>
+                  </td>
+                  <td className="py-6 px-2 text-right text-[10px] font-bold opacity-40">{new Date(t.created_at).toLocaleDateString("en-GB")}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {transactions.map((t) => (
-                  <tr key={t.id} className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <td className="p-3">{t.id}</td>
-                    <td className="p-3">{t.buyer_id}</td>
-                    <td className="p-3">{t.seller_id}</td>
-                    <td className="p-3">{t.item_id}</td>
-                    <td className="p-3 font-medium">{formatRupiah(t.amount)}</td>
-                    <td className="p-3">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        t.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                        t.status === 'pending' ? 'bg-gray-100 text-gray-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="p-3">{new Date(t.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

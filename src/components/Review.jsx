@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function Review({ itemId }) {
   const { isDark } = useTheme();
@@ -11,13 +11,13 @@ function Review({ itemId }) {
   const [user, setUser] = useState(null);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [showAddReview, setShowAddReview] = useState(false);
-  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const [replyingTo, setReplyingTo] = useState(null);
-  const [replyText, setReplyText] = useState('');
+  const [replyText, setReplyText] = useState("");
   const [hasReviewed, setHasReviewed] = useState(false);
   const [buyerInfos, setBuyerInfos] = useState({});
   const [editingReview, setEditingReview] = useState(null);
-  const [editReview, setEditReview] = useState({ rating: 5, comment: '' });
+  const [editReview, setEditReview] = useState({ rating: 5, comment: "" });
   const [item, setItem] = useState(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [submittingReply, setSubmittingReply] = useState(false);
@@ -29,29 +29,13 @@ function Review({ itemId }) {
     checkUserAndPurchase();
   }, [itemId]);
 
-  // Reset reply state if user is not seller
-  useEffect(() => {
-    if (user && user.role !== 'seller' && replyingTo !== null) {
-      setReplyingTo(null);
-      setReplyText('');
-    }
-    if (user && editingReview !== null) {
-      const review = reviews.find(r => r.id === editingReview);
-      if (review && (user.role !== 'buyer' || user.id !== review.buyer_id)) {
-        setEditingReview(null);
-      }
-    }
-  }, [user, replyingTo, editingReview, reviews]);
-
   const fetchReviews = async () => {
     try {
       const res = await fetch(`${CRUD_URL}/reviews/${itemId}`);
       if (res.ok) {
         const data = await res.json();
         setReviews(data);
-
-        // Fetch buyer info for each review
-        const buyerIds = [...new Set(data.map(review => review.buyer_id).filter(id => id != null))];
+        const buyerIds = [...new Set(data.map((review) => review.buyer_id).filter((id) => id != null))];
         const buyerInfoPromises = buyerIds.map(async (buyerId) => {
           try {
             const buyerRes = await fetch(`${AUTH_URL}/users/${buyerId}`);
@@ -60,37 +44,27 @@ function Review({ itemId }) {
               return { buyerId, username: buyerData.username };
             }
           } catch (error) {
-            console.error(`Error fetching buyer ${buyerId}:`, error);
+            console.error(error);
           }
-          return { buyerId, username: `Buyer ${buyerId}` };
+          return { buyerId, username: `Client ${buyerId}` };
         });
-
         const buyerInfosArray = await Promise.all(buyerInfoPromises);
         const buyerInfosMap = {};
         buyerInfosArray.forEach(({ buyerId, username }) => {
           buyerInfosMap[buyerId] = username;
         });
         setBuyerInfos(buyerInfosMap);
-
-        // Check if current user has reviewed
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (token) {
-          try {
-            const userRes = await fetch(`${AUTH_URL}/users/me`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (userRes.ok) {
-              const userData = await userRes.json();
-              const hasReviewedItem = data.some(review => review.buyer_id === userData.id);
-              setHasReviewed(hasReviewedItem);
-            }
-          } catch (error) {
-            console.error("Error checking review status:", error);
+          const userRes = await fetch(`${AUTH_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            setHasReviewed(data.some((review) => review.buyer_id === userData.id));
           }
         }
       }
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -99,348 +73,155 @@ function Review({ itemId }) {
   const fetchItem = async () => {
     try {
       const res = await fetch(`${CRUD_URL}/catalog-items/${itemId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setItem(data);
-      } else {
-        console.error("Failed to fetch item:", res.status);
-      }
+      if (res.ok) setItem(await res.json());
     } catch (error) {
-      console.error("Error fetching item:", error);
+      console.error(error);
     }
   };
 
   const checkUserAndPurchase = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return;
-
     try {
-      // Get user info
-      const userRes = await fetch(`${AUTH_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const userRes = await fetch(`${AUTH_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
       if (userRes.ok) {
         const userData = await userRes.json();
         setUser(userData);
-
-        // Check if user has purchased this item
-        const transRes = await fetch(`${CRUD_URL}/transactions/user`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const transRes = await fetch(`${CRUD_URL}/transactions/user`, { headers: { Authorization: `Bearer ${token}` } });
         if (transRes.ok) {
           const transData = await transRes.json();
-          const hasPurchasedItem = transData.some(trans => 
-            trans.item_id === itemId && trans.status === 'completed'
-          );
-          setHasPurchased(hasPurchasedItem);
+          setHasPurchased(transData.some((trans) => trans.item_id === itemId && trans.status === "completed"));
         }
       }
     } catch (error) {
-      console.error("Error checking user:", error);
+      console.error(error);
     }
   };
 
   const handleAddReview = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return;
-
     setSubmittingReview(true);
     try {
-      // Get transactions to find the transaction_id
-      const transRes = await fetch(`${CRUD_URL}/transactions/user`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const transRes = await fetch(`${CRUD_URL}/transactions/user`, { headers: { Authorization: `Bearer ${token}` } });
       const transData = await transRes.json();
-      const transaction = transData.find(trans => 
-        trans.item_id === itemId && trans.status === 'completed'
-      );
-      if (!transaction) {
-        alert('You must purchase this item first to leave a review.');
-        return;
-      }
-
+      const transaction = transData.find((trans) => trans.item_id === itemId && trans.status === "completed");
+      if (!transaction) return;
       const res = await fetch(`${CRUD_URL}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          transaction_id: transaction.id,
-          rating: newReview.rating,
-          comment: newReview.comment
-        })
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ transaction_id: transaction.id, rating: newReview.rating, comment: newReview.comment }),
       });
-
-      if (res.ok) {
-        fetchReviews();
-      } else {
-        alert('Failed to submit review. Please try again.');
-      }
+      if (res.ok) fetchReviews();
     } catch (error) {
-      console.error("Error adding review:", error);
-      alert('Error submitting review. Please try again.');
+      console.error(error);
     } finally {
       setSubmittingReview(false);
       setShowAddReview(false);
-      setNewReview({ rating: 5, comment: '' });
-    }
-  };
-
-  const handleEditReview = async (reviewId) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    setSubmittingEdit(true);
-    try {
-      const res = await fetch(`${CRUD_URL}/reviews/${reviewId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          rating: editReview.rating,
-          comment: editReview.comment
-        })
-      });
-
-      if (res.ok) {
-        fetchReviews();
-      } else {
-        alert('Failed to update review. Please try again.');
-      }
-    } catch (error) {
-      console.error("Error editing review:", error);
-      alert('Error updating review. Please try again.');
-    } finally {
-      setSubmittingEdit(false);
-      setEditingReview(null);
-    }
-  };
-
-  const handleReply = async (reviewId) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    setSubmittingReply(true);
-    try {
-      const res = await fetch(`${CRUD_URL}/reviews/${reviewId}/reply`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ reply: replyText })
-      });
-
-      if (res.ok) {
-        fetchReviews();
-      } else {
-        alert('Failed to submit reply. Please try again.');
-      }
-    } catch (error) {
-      console.error("Error replying:", error);
-      alert('Error submitting reply. Please try again.');
-    } finally {
-      setSubmittingReply(false);
-      setReplyingTo(null);
-      setReplyText('');
+      setNewReview({ rating: 5, comment: "" });
     }
   };
 
   const renderStars = (rating) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
-        ★
-      </span>
-    ));
+    return (
+      <div className="flex gap-1">
+        {Array.from({ length: 5 }, (_, i) => (
+          <svg key={i} className={`w-3 h-3 ${i < rating ? "fill-zinc-900 dark:fill-zinc-100" : "fill-zinc-200 dark:fill-zinc-800"}`} viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        ))}
+      </div>
+    );
   };
 
-  if (loading) return <div>Loading reviews...</div>;
+  if (loading) return null;
 
   return (
-    <div className={`mt-8 p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-      <h3 className="text-2xl font-bold mb-4">Reviews</h3>
+    <div className="max-w-4xl">
+      <div className="flex justify-between items-baseline mb-12">
+        <h3 className="text-3xl font-serif italic">Testimonials.</h3>
+        <span className={`text-[10px] uppercase tracking-[0.3em] font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Verified Reviews</span>
+      </div>
 
-      {/* Add Review Button */}
-      {user && user.role === 'buyer' && hasPurchased && !hasReviewed && !showAddReview && (
+      {user && user.role === "buyer" && hasPurchased && !hasReviewed && !showAddReview && (
         <button
           onClick={() => setShowAddReview(true)}
-          className="mb-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className={`mb-12 px-8 py-4 rounded-none font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900" : "border-zinc-100 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"}`}
         >
-          Add Review
+          Draft a Testimonial
         </button>
       )}
 
-      {/* Add Review Form */}
       {showAddReview && (
-        <form onSubmit={handleAddReview} className="mb-6 p-4 border rounded">
-          <div className="mb-4">
-            <label className="block mb-2">Rating:</label>
-            <div className="flex">
-              {[1,2,3,4,5].map(num => (
+        <form onSubmit={handleAddReview} className={`mb-16 p-8 border ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
+          <div className="mb-8">
+            <label className="block text-[10px] uppercase tracking-widest font-black mb-4">Rating</label>
+            <div className="flex gap-4">
+              {[1, 2, 3, 4, 5].map((num) => (
                 <button
                   key={num}
                   type="button"
-                  onClick={() => setNewReview({...newReview, rating: num})}
-                  className={`text-2xl ${num <= newReview.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                  onClick={() => setNewReview({ ...newReview, rating: num })}
+                  className={`transition-all duration-300 ${num <= newReview.rating ? "opacity-100 scale-110" : "opacity-20 hover:opacity-50"}`}
                 >
-                  ★
+                  <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
                 </button>
               ))}
             </div>
           </div>
-          <div className="mb-4">
-            <label className="block mb-2">Comment:</label>
+          <div className="mb-8">
+            <label className="block text-[10px] uppercase tracking-widest font-black mb-4">Commentary</label>
             <textarea
               value={newReview.comment}
-              onChange={(e) => setNewReview({...newReview, comment: e.target.value})}
-              className="w-full p-2 border rounded"
+              onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+              className="w-full py-4 bg-transparent border-b border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors"
               rows="3"
             />
           </div>
-          <button type="submit" disabled={submittingReview} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50">
-            {submittingReview ? 'Submitting...' : 'Submit Review'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowAddReview(false)}
-            className="ml-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-          >
-            Cancel
-          </button>
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={submittingReview}
+              className={`px-10 py-5 rounded-none font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-white"}`}
+            >
+              Publish
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddReview(false)}
+              className={`px-10 py-5 rounded-none font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border border-zinc-200 dark:border-zinc-800`}
+            >
+              Dismiss
+            </button>
+          </div>
         </form>
       )}
 
-      {/* Reviews List */}
-      {reviews.length === 0 ? (
-        <p>No reviews yet.</p>
-      ) : (
-        reviews.map(review => (
-          <div key={review.id} className="mb-4 p-4 border rounded bg-gray-50">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-gray-800">
-                {buyerInfos[review.buyer_id] || `Buyer ${review.buyer_id}`}
-              </span>
-              <div className="flex">{renderStars(review.rating)}</div>
+      <div className="space-y-16">
+        {reviews.length === 0 ? (
+          <p className={`text-sm italic ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>No reviews have been published for this item.</p>
+        ) : (
+          reviews.map((review) => (
+            <div key={review.id} className="relative">
+              <div className="flex justify-between items-start mb-6">
+                <span className="text-xs uppercase tracking-widest font-black">{buyerInfos[review.buyer_id] || `Client ${review.buyer_id}`}</span>
+                {renderStars(review.rating)}
+              </div>
+              <p className={`text-lg leading-relaxed font-serif ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{review.comment}</p>
+
+              {review.reply && (
+                <div className={`mt-8 ml-8 p-8 border-l-2 ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
+                  <span className={`block text-[10px] uppercase tracking-widest font-black mb-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Seller Correspondence</span>
+                  <p className={`text-sm leading-relaxed italic ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>{review.reply}</p>
+                </div>
+              )}
             </div>
-            {review.comment && (
-              <p className="text-gray-700 mt-2">{review.comment}</p>
-            )}
-            {review.reply && (
-              <div className="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
-                <strong className="text-blue-800">Seller Reply:</strong>
-                <p className="text-blue-700 mt-1">{review.reply}</p>
-              </div>
-            )}
-            {user && user.role === 'buyer' && user.id === review.buyer_id && !editingReview && (
-              <button                type="button"                onClick={() => {
-                  setEditingReview(review.id);
-                  setEditReview({ rating: review.rating, comment: review.comment || '' });
-                }}
-                className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
-              >
-                Edit Review
-              </button>
-            )}
-            {user && user.role === 'seller' && user.id === item?.user_id && !review.reply && (
-              <button
-                onClick={() => {
-                  setReplyingTo(review.id);
-                  setReplyText('');
-                }}
-                className="mt-2 text-sm text-green-600 hover:text-green-800 underline"
-              >
-                Reply
-              </button>
-            )}
-            {user && user.role === 'seller' && user.id === item?.user_id && review.reply && (
-              <button
-                onClick={() => {
-                  setReplyingTo(review.id);
-                  setReplyText(review.reply);
-                }}
-                className="mt-2 text-sm text-green-600 hover:text-green-800 underline"
-              >
-                Edit Reply
-              </button>
-            )}
-            {editingReview === review.id && user && user.role === 'buyer' && user.id === review.buyer_id && (
-              <div className={`mt-3 p-3 border rounded bg-white ${isDark ? 'border-gray-900' : 'border-gray-300'}`}>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1 text-gray-900">Rating:</label>
-                  <div className="flex">
-                    {[1,2,3,4,5].map(num => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setEditReview({...editReview, rating: num})}
-                        className={`text-xl mr-1 ${num <= editReview.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                      >
-                        ★
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1 text-gray-900">Comment:</label>
-                  <textarea
-                    value={editReview.comment}
-                    onChange={(e) => setEditReview({...editReview, comment: e.target.value})}
-                    className={`w-full p-2 border rounded text-sm bg-white text-gray-900 ${isDark ? 'border-gray-900' : 'border-gray-300'}`}
-                    rows="3"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditReview(review.id)}
-                    disabled={submittingEdit}
-                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 disabled:opacity-50"
-                  >
-                    {submittingEdit ? 'Updating...' : 'Update'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingReview(null)}
-                    className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-            {replyingTo === review.id && user && user.role === 'seller' && user.id === item?.user_id && (
-              <div className={`mt-3 p-3 border rounded bg-white ${isDark ? 'border-gray-900' : 'border-gray-300'}`}>
-                <textarea
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  className={`w-full p-2 border rounded text-sm bg-white text-gray-900 ${isDark ? 'border-gray-900' : 'border-gray-300'}`}
-                  rows="3"
-                  placeholder={review.reply ? "Edit your reply..." : "Write your reply..."}
-                />
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => handleReply(review.id)}
-                    disabled={submittingReply}
-                    className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 disabled:opacity-50"
-                  >
-                    {submittingReply ? 'Submitting...' : (review.reply ? 'Update Reply' : 'Submit Reply')}
-                  </button>
-                  <button
-                    onClick={() => { setReplyingTo(null); setReplyText(''); }}
-                    className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }

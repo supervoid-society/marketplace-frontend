@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function UserCRUD({ token }) {
   const { isDark } = useTheme();
@@ -27,7 +27,17 @@ function UserCRUD({ token }) {
   };
 
   const handleDeleteUser = async (id) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+    const result = await Swal.fire({
+      title: "Revoke Access?",
+      text: "This user's account will be permanently terminated.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Terminate",
+      confirmButtonColor: "#000",
+      background: isDark ? "#09090b" : "#fff",
+      color: isDark ? "#fff" : "#000",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await fetch(`${AUTH_URL}/users/${id}`, {
         method: "DELETE",
@@ -37,12 +47,6 @@ function UserCRUD({ token }) {
       });
       if (res.ok) {
         fetchUsers();
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal',
-          text: 'Failed to delete user',
-        });
       }
     } catch (error) {
       console.error("Delete user error:", error);
@@ -50,47 +54,36 @@ function UserCRUD({ token }) {
   };
 
   return (
-    <div className="min-h-screen pt-24 p-6">
-      <div className="text-center mb-6 sm:mb-8">
-        <h2 className={`text-2xl sm:text-3xl font-bold mb-4 sm:mb-0 transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>User Management</h2>
+    <div>
+      <div className="flex justify-between items-baseline mb-12">
+        <h2 className="text-4xl font-serif italic">Identity Audit</h2>
+        <span className={`text-[10px] uppercase tracking-[0.3em] font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Users Registry</span>
       </div>
 
-      <div className={`rounded-xl shadow-lg overflow-hidden ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300 min-w-[600px]">
-            <thead className={`${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-              <tr>
-                <th className={`text-left p-4 sm:p-6 font-semibold border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>ID</th>
-                <th className={`text-left p-4 sm:p-6 font-semibold border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Username</th>
-                <th className={`text-left p-4 sm:p-6 font-semibold border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Role</th>
-                <th className={`text-left p-4 sm:p-6 font-semibold border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Created At</th>
-                <th className={`text-left p-4 sm:p-6 font-semibold border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className={`border-b transition duration-200 ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-100 hover:bg-gray-50'}`}>
-                  <td className={`p-4 sm:p-6 border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{user.id}</td>
-                  <td className={`p-4 sm:p-6 font-medium border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{user.username}</td>
-                  <td className={`p-4 sm:p-6 border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{user.role}</td>
-                  <td className={`p-4 sm:p-6 border border-gray-300 whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{new Date(user.created_at).toLocaleDateString()}</td>
-                  <td className="p-4 sm:p-6 border border-gray-300 whitespace-nowrap">
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-gray-600 transition duration-200"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div className="border border-zinc-100 dark:border-zinc-900 space-y-px bg-zinc-100 dark:bg-zinc-900">
+        {users.map((user) => (
+          <div key={user.id} className={`p-4 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+            <div className="flex gap-8">
+              <span className="text-[10px] font-black opacity-20 uppercase tracking-widest mt-1">UID / {user.id.slice(-6)}</span>
+              <div>
+                <h3 className="text-xl font-serif tracking-tight mb-1">{user.username}</h3>
+                <p className={`text-[10px] uppercase tracking-[0.2em] font-black ${user.role === "admin" ? "text-indigo-500" : isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                  Access Level / {user.role}
+                </p>
+              </div>
+            </div>
 
+            <div className="flex flex-col md:items-end gap-2">
+              <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+                Joined / {new Date(user.created_at).toLocaleDateString("en-GB")}
+              </span>
+              <button onClick={() => handleDeleteUser(user.id)} className={`text-[10px] uppercase tracking-[0.3em] font-black text-rose-500 hover:underline`}>
+                Terminate Access
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

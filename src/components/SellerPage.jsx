@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || 'http://localhost:8788';
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function SellerPage() {
   const { userId } = useParams();
@@ -15,7 +15,7 @@ function SellerPage() {
   const [totalReviews, setTotalReviews] = useState(0);
 
   const formatRupiah = (angka) => {
-    return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   useEffect(() => {
@@ -24,20 +24,14 @@ function SellerPage() {
 
   const fetchSellerCatalog = async () => {
     try {
-      // Fetch seller info
       const sellerRes = await fetch(`${AUTH_URL}/sellers/public/${userId}`);
-      if (sellerRes.ok) {
-        const sellerData = await sellerRes.json();
-        setSeller(sellerData);
-      }
+      if (sellerRes.ok) setSeller(await sellerRes.json());
 
-      // Fetch catalog items for this seller
       const catalogRes = await fetch(`${CRUD_URL}/catalog-items`);
       const allCatalog = await catalogRes.json();
-      const sellerCatalog = allCatalog.filter(item => item.user_id === userId);
+      const sellerCatalog = allCatalog.filter((item) => item.user_id === userId);
       setCatalog(sellerCatalog);
 
-      // Fetch reviews for all seller items and calculate average
       let totalRating = 0;
       let reviewCount = 0;
       for (const item of sellerCatalog) {
@@ -45,162 +39,103 @@ function SellerPage() {
           const reviewRes = await fetch(`${CRUD_URL}/reviews/${item.id}`);
           if (reviewRes.ok) {
             const reviews = await reviewRes.json();
-            reviews.forEach(review => {
+            reviews.forEach((review) => {
               totalRating += review.rating;
               reviewCount++;
             });
           }
         } catch (error) {
-          console.error(`Error fetching reviews for item ${item.id}:`, error);
+          console.error(error);
         }
       }
       setTotalReviews(reviewCount);
       setAverageRating(reviewCount > 0 ? (totalRating / reviewCount).toFixed(1) : 0);
     } catch (error) {
-      console.error("Error fetching seller catalog:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${isDark ? 'border-white' : 'border-gray-900'}`}></div>
-    </div>
-  );
+  if (loading) return null;
 
   return (
-    <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>
-      <div className="max-w-7xl mx-auto">
-        <Link to="/catalog" className={`inline-block mb-6 px-4 py-2 rounded-lg transition-colors duration-200 ${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}>
-          ← Kembali ke Katalog
-        </Link>
-        
-        {seller && (
-          <div className={`mb-8 ${isDark ? 'bg-gradient-to-r from-gray-800 to-gray-900' : 'bg-gradient-to-r from-blue-50 to-indigo-50'} border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="flex items-center gap-6">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg overflow-hidden ${
-                isDark ? 'bg-blue-900/50 border-2 border-blue-700' : 'bg-white border-2 border-blue-200'
-              }`}>
-                {seller.image_id ? (
-                  <img
-                    src={`${AUTH_URL}/users/profile-image/${userId}`}
-                    alt={seller.store_name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { 
-                      e.target.style.display = 'none'; 
-                      e.target.nextElementSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <div className={`w-full h-full flex items-center justify-center ${seller.image_id ? 'hidden' : ''}`}>
-                  <svg className={`w-10 h-10 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                </div>
-                <div className="flex-1">
-                  <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>{seller.store_name}</h1>
-                  {seller.description && (
-                    <p className={`text-lg mb-3 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{seller.description}</p>
-                  )}
-                  <div className="flex items-center gap-4">
-                    {seller.contact_phone && (
-                      <div className="flex items-center gap-2">
-                        <svg className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{seller.contact_phone}</span>
-                      </div>
-                    )}
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                      isDark ? 'bg-green-900/30 text-green-300 border border-green-700/50' : 'bg-green-50 text-green-700 border border-green-200'
-                    }`}>
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span>Toko Terpercaya</span>
-                    </div>
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                      isDark ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/50' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                    }`}>
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span>{averageRating} stars ({totalReviews} reviews)</span>
-                    </div>
-                  </div>
-                </div>
+    <div className="py-12 px-6 max-w-7xl mx-auto">
+      <Link
+        to="/catalog"
+        className={`inline-flex items-center gap-2 mb-12 text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-200 ${isDark ? "text-zinc-500 hover:text-zinc-100" : "text-zinc-400 hover:text-zinc-900"}`}
+      >
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Collection
+      </Link>
+
+      {seller && (
+        <div className="mb-32">
+          <div className="flex flex-col md:flex-row gap-16 items-start md:items-end">
+            <div className={`w-48 h-64 border ${isDark ? "border-zinc-800" : "border-zinc-100"} flex-shrink-0 grayscale`}>
+              {seller.image_id ? (
+                <img src={`${AUTH_URL}/users/profile-image/${userId}`} alt={seller.store_name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-[10px] uppercase tracking-widest opacity-20">Portrait</div>
+              )}
+            </div>
+            <div className="flex-1">
+              <h1 className="text-6xl md:text-9xl font-serif font-medium tracking-tighter leading-none mb-8">{seller.store_name}</h1>
+              <div className="flex flex-wrap gap-8 items-center">
+                <p className={`text-sm uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>EST. {new Date().getFullYear()}</p>
+                <p className={`text-sm uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+                  {averageRating} Rating / {totalReviews} Reviews
+                </p>
+                <p className={`text-sm uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Verified Merchant</p>
               </div>
             </div>
           </div>
-        )}
-
-        <div className="text-center mb-8">
-          <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            Produk Toko
-          </h2>
-          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            Temukan berbagai produk berkualitas dari {seller?.store_name}
+          <div className={`h-px w-full my-12 ${isDark ? "bg-zinc-900" : "bg-zinc-100"}`}></div>
+          <p className={`text-2xl font-serif italic max-w-3xl leading-relaxed ${isDark ? "text-zinc-300" : "text-zinc-800"}`}>
+            {seller.description || "A purveyor of excellence, dedicated to quality and refined commerce."}
           </p>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 place-items-center">
-          {catalog.length === 0 ? (
-            <div className="col-span-full text-center py-16">
-              <div className={`backdrop-blur-sm rounded-2xl p-8 shadow-lg max-w-md mx-auto border ${isDark ? 'bg-gray-900/80 border-gray-800' : 'bg-white/80 border-gray-200'}`}>
-                <svg className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <h2 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-700'}`}>Katalog Kosong</h2>
-                <p className={`mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Belum ada produk yang tersedia di toko ini</p>
-              </div>
-            </div>
-          ) : (
-            catalog.map((item) => (
-              <div key={item.id} className={`group backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border w-80 ${isDark ? 'bg-gray-900/80 border-gray-800 text-white hover:bg-gray-800/80' : 'bg-white/80 border-gray-200 text-gray-900 hover:bg-gray-50/80'}`}>
-                {item.image_id && (
-                  <div className="relative overflow-hidden rounded-xl mb-4">
-                    <img
-                      src={`${CRUD_URL}/images/${item.image_id}`}
-                      alt={item.name}
-                      className="w-full aspect-[4/3] object-cover group-hover:scale-110 transition-transform duration-300"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                    <div className={`absolute inset-0 ${isDark ? 'bg-black/20' : 'bg-black/20'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+      <div className="flex justify-between items-baseline mb-16">
+        <h2 className="text-4xl font-serif italic">Inventory.</h2>
+        <span className={`text-[10px] uppercase tracking-[0.3em] font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Current Selection</span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
+        {catalog.length === 0 ? (
+          <div className="col-span-full py-20 border border-dashed border-zinc-200 dark:border-zinc-800 text-center">
+            <p className="text-sm italic opacity-40">No items currently available from this merchant.</p>
+          </div>
+        ) : (
+          catalog.map((item) => (
+            <div key={item.id} className="group flex flex-col">
+              <div className={`relative overflow-hidden mb-6 border ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
+                {item.image_id ? (
+                  <img
+                    src={`${CRUD_URL}/images/${item.image_id}`}
+                    alt={item.name}
+                    className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className={`aspect-square flex items-center justify-center ${isDark ? "bg-zinc-900" : "bg-zinc-50"}`}>
+                    <span className="text-[10px] uppercase tracking-widest opacity-20">No Visual</span>
                   </div>
                 )}
-                <h2 className={`text-xl font-bold mb-2 transition-colors duration-200 ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.name}</h2>
-                <p className={`mb-4 line-clamp-2 text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{item.description}</p>
-                <div className="mb-4">
-                  <p className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatRupiah(item.price)}</p>
-                  <div className="flex items-center gap-2">
-                    {item.qty > 0 ? (
-                      <>
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>In Stock ({item.qty})</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span className={`text-sm ${isDark ? 'text-red-400' : 'text-red-600'}`}>Out of Stock</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2 mb-4">
-                  <Link
-                    to={`/catalog/${item.id}`}
-                    className="flex-1 py-2 px-4 rounded-xl transition-all duration-200 text-center font-medium bg-black text-white hover:bg-gray-800"
-                  >
-                    Lihat Detail
-                  </Link>
-                </div>
               </div>
-            ))
-          )}
-        </div>
+              <h3 className="text-xl font-serif tracking-tight mb-1">{item.name}</h3>
+              <p className="text-lg font-medium tracking-tighter mb-4">{formatRupiah(item.price)}</p>
+              <Link
+                to={`/catalog/${item.id}`}
+                className={`py-4 px-6 rounded-none text-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+              >
+                View Details
+              </Link>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

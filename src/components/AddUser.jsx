@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8787';
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function AddUser({ token }) {
   const navigate = useNavigate();
@@ -25,52 +25,72 @@ function AddUser({ token }) {
         navigate("/manage-users");
       } else {
         const error = await res.json();
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal',
-          text: error.error || "Failed to add user",
-        });
+        Swal.fire({ icon: "error", title: "Registration Error", text: error.error });
       }
     } catch (error) {
-      console.error("Add error:", error);
+      console.error(error);
     }
   };
 
   return (
-    <div className={`min-h-screen pt-24 p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <div className={`max-w-md mx-auto p-8 rounded-xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}>
-      <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New User</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
-          className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-          required
-        />
-        <div className="flex gap-4">
-          <button type="submit" className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-500 transition duration-200 flex-1">
-            Add User
+    <div className="py-12 px-6 max-w-md mx-auto">
+      <Link
+        to="/manage-users"
+        className={`inline-flex items-center gap-2 mb-12 text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-200 ${isDark ? "text-zinc-500 hover:text-zinc-100" : "text-zinc-400 hover:text-zinc-900"}`}
+      >
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Audit
+      </Link>
+
+      <div className="mb-16 text-center">
+        <h1 className="text-5xl font-serif italic mb-4">New Profile.</h1>
+        <p className={`text-xs uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Authorizing System Access</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-12">
+        <div className="space-y-8">
+          <div>
+            <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Identity / Username</label>
+            <input
+              type="text"
+              placeholder="Identifier"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${isDark ? "border-zinc-800 text-white placeholder-zinc-800 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-200 focus:border-black"}`}
+              required
+            />
+          </div>
+          <div>
+            <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Credentials / Password</label>
+            <input
+              type="password"
+              placeholder="Secret Key"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${isDark ? "border-zinc-800 text-white placeholder-zinc-800 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-200 focus:border-black"}`}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <button
+            type="submit"
+            className={`w-full py-6 rounded-none text-[10px] uppercase tracking-[0.3em] font-black transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+          >
+            Verify & Create
           </button>
           <button
             type="button"
             onClick={() => navigate("/manage-users")}
-            className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-200 flex-1"
+            className={`w-full py-4 rounded-none text-[10px] uppercase tracking-[0.3em] font-black transition-all duration-300 border border-transparent ${isDark ? "text-zinc-500 hover:text-zinc-100" : "text-zinc-400 hover:text-zinc-900"}`}
           >
             Cancel
           </button>
         </div>
       </form>
-    </div>
     </div>
   );
 }
