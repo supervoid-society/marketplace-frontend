@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
+import { AUTH_URL } from "../config";
 import Swal from "sweetalert2";
-
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function WalletPage() {
   const { isDark } = useTheme();
@@ -173,9 +172,7 @@ function WalletPage() {
     <div className="py-12 px-6 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
         <div>
-          <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">
-            Wallet.
-          </h1>
+          <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">Wallet.</h1>
           <p className={`text-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Manage your capital and peer-to-peer transfers.</p>
         </div>
         <div className={`p-8 border ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-100 bg-zinc-50/50"}`}>
@@ -197,9 +194,7 @@ function WalletPage() {
                 }`}
               >
                 {tab}
-                {activeTab === tab && (
-                  <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${isDark ? "bg-zinc-100" : "bg-zinc-900"}`}></div>
-                )}
+                {activeTab === tab && <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${isDark ? "bg-zinc-100" : "bg-zinc-900"}`}></div>}
               </button>
             ))}
           </div>
@@ -212,15 +207,12 @@ function WalletPage() {
                 history.map((h) => (
                   <div key={h.id} className={`p-6 border ${isDark ? "border-zinc-900 bg-zinc-950" : "border-zinc-100 bg-white"} flex justify-between items-center`}>
                     <div>
-                      <p className="text-sm font-bold">
-                        {h.sender_id === payload.userId ? `To: ${h.receiver_name}` : `From: ${h.sender_name}`}
-                      </p>
-                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
-                        {new Date(h.created_at).toLocaleString()}
-                      </p>
+                      <p className="text-sm font-bold">{h.sender_id === payload.userId ? `To: ${h.receiver_name}` : `From: ${h.sender_name}`}</p>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">{new Date(h.created_at).toLocaleString()}</p>
                     </div>
                     <span className={`text-xl font-black tracking-tighter ${h.sender_id === payload.userId ? "text-rose-500" : "text-emerald-500"}`}>
-                      {h.sender_id === payload.userId ? "-" : "+"}{formatRupiah(h.amount)}
+                      {h.sender_id === payload.userId ? "-" : "+"}
+                      {formatRupiah(h.amount)}
                     </span>
                   </div>
                 ))
@@ -237,10 +229,12 @@ function WalletPage() {
                   placeholder="Type at least 2 characters..."
                   className="w-full py-4 bg-transparent border-b border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors"
                 />
-                
+
                 {searchResults.length > 0 && !selectedUser && (
-                  <div className={`absolute left-0 right-0 top-full z-10 mt-1 border ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white"} overflow-hidden shadow-xl`}>
-                    {searchResults.map(user => (
+                  <div
+                    className={`absolute left-0 right-0 top-full z-10 mt-1 border ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white"} overflow-hidden shadow-xl`}
+                  >
+                    {searchResults.map((user) => (
                       <button
                         key={user.id}
                         type="button"
@@ -259,8 +253,19 @@ function WalletPage() {
                 )}
                 {selectedUser && (
                   <div className="mt-4 flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20">
-                    <span className="text-sm font-bold text-emerald-500">Selected: {selectedUser.username} ({selectedUser.role})</span>
-                    <button type="button" onClick={() => { setSelectedUser(null); setSearchQuery(""); }} className="text-[10px] uppercase font-black opacity-40 hover:opacity-100">Clear</button>
+                    <span className="text-sm font-bold text-emerald-500">
+                      Selected: {selectedUser.username} ({selectedUser.role})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedUser(null);
+                        setSearchQuery("");
+                      }}
+                      className="text-[10px] uppercase font-black opacity-40 hover:opacity-100"
+                    >
+                      Clear
+                    </button>
                   </div>
                 )}
               </div>
@@ -280,7 +285,9 @@ function WalletPage() {
                 type="submit"
                 disabled={loading || !selectedUser || !amount}
                 className={`w-full py-6 rounded-none font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 border ${
-                  isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
+                  isDark
+                    ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
+                    : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
                 } disabled:opacity-20`}
               >
                 {loading ? "Processing..." : activeTab === "send" ? "Execute Transfer" : "Send Request"}
@@ -297,7 +304,7 @@ function WalletPage() {
               {pendingRequests.incoming.length === 0 ? (
                 <p className="text-xs italic opacity-30">No incoming requests.</p>
               ) : (
-                pendingRequests.incoming.map(req => (
+                pendingRequests.incoming.map((req) => (
                   <div key={req.id} className={`p-6 border ${isDark ? "border-zinc-900 bg-zinc-950" : "border-zinc-100 bg-white"}`}>
                     <div className="flex justify-between items-start mb-6">
                       <div>
@@ -308,13 +315,13 @@ function WalletPage() {
                     </div>
                     <div className="flex gap-4">
                       <button
-                        onClick={() => handleRespond(req.id, 'accept')}
+                        onClick={() => handleRespond(req.id, "accept")}
                         className={`flex-1 py-3 text-[10px] uppercase font-black border ${isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-white"}`}
                       >
                         Accept & Pay
                       </button>
                       <button
-                        onClick={() => handleRespond(req.id, 'reject')}
+                        onClick={() => handleRespond(req.id, "reject")}
                         className={`flex-1 py-3 text-[10px] uppercase font-black border border-zinc-200 dark:border-zinc-800`}
                       >
                         Decline
@@ -332,7 +339,7 @@ function WalletPage() {
               {pendingRequests.outgoing.length === 0 ? (
                 <p className="text-xs italic opacity-30">No outgoing requests.</p>
               ) : (
-                pendingRequests.outgoing.map(req => (
+                pendingRequests.outgoing.map((req) => (
                   <div key={req.id} className={`p-6 border ${isDark ? "border-zinc-900 bg-zinc-950/50" : "border-zinc-100 bg-white/50"}`}>
                     <p className="text-sm font-bold opacity-60">Sent to {req.target_name}</p>
                     <p className="text-2xl font-black tracking-tighter mt-1 opacity-60">{formatRupiah(req.amount)}</p>

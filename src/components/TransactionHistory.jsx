@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
+import { CRUD_URL } from "../config";
 
 function TransactionHistory() {
   const { isDark } = useTheme();
@@ -54,7 +53,10 @@ function TransactionHistory() {
           {transactions.map((t) => (
             <div key={t.id} className={`p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 ${isDark ? "bg-zinc-950" : "bg-white"}`}>
               <div className="flex gap-8 items-center">
-                <Link to={`/catalog/${t.item_id}`} className={`w-20 h-20 md:w-24 md:h-24 border grayscale shrink-0 transition-all duration-300 hover:grayscale-0 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-100 bg-zinc-50"}`}>
+                <Link
+                  to={`/catalog/${t.item_id}`}
+                  className={`w-20 h-20 md:w-24 md:h-24 border grayscale shrink-0 transition-all duration-300 hover:grayscale-0 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-100 bg-zinc-50"}`}
+                >
                   <img
                     src={`${CRUD_URL}/images/${t.item_image_id}`}
                     alt={t.item_name}

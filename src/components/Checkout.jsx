@@ -3,10 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCart } from "../contexts/CartContext";
 import jsPDF from "jspdf";
+import { CRUD_URL, AUTH_URL } from "../config";
 import Swal from "sweetalert2";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
 
 function Checkout() {
   const navigate = useNavigate();

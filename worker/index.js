@@ -1,5 +1,5 @@
 export default {
-  fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     if (url.pathname.startsWith("/api/")) {
@@ -8,6 +8,27 @@ export default {
       });
     }
 
-    return new Response(null, { status: 404 });
+    // Serve static assets
+    const response = await env.ASSETS.fetch(request);
+
+    // If the request is for index.html (or a SPA route that serves index.html),
+    // inject the environment variables.
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("text/html")) {
+      return new HTMLRewriter()
+        .on("head", {
+          element(element) {
+            const vars = {
+              VITE_AUTH_SERVICE_URL: env.VITE_AUTH_SERVICE_URL,
+              VITE_CRUD_SERVICE_URL: env.VITE_CRUD_SERVICE_URL,
+            };
+
+            element.append(`<script>window.ENV = ${JSON.stringify(vars)};</script>`, { html: true });
+          },
+        })
+        .transform(response);
+    }
+
+    return response;
   },
 };

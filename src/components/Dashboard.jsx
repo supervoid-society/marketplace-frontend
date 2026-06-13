@@ -3,8 +3,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import CatalogCRUD from "./CatalogCRUD";
 import UserCRUD from "./UserCRUD";
 import TransactionStats from "./TransactionStats";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
+import { CRUD_URL } from "../config";
 
 function Dashboard({ token, onLogout }) {
   const { isDark } = useTheme();

@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { CRUD_URL } from "../config";
 import Swal from "sweetalert2";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
 
 function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
   const navigate = useNavigate();
@@ -104,26 +103,29 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px bg-zinc-100 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-900">
           {catalog.map((item) => (
-            <div key={item.id} className={`p-8 md:p-10 flex flex-col justify-between transition-opacity duration-500 ${isDark ? "bg-zinc-950" : "bg-white"} ${item.is_archived ? "opacity-50" : "opacity-100"}`}>
+            <div
+              key={item.id}
+              className={`p-8 md:p-10 flex flex-col justify-between transition-opacity duration-500 ${isDark ? "bg-zinc-950" : "bg-white"} ${item.is_archived ? "opacity-50" : "opacity-100"}`}
+            >
               <div className="mb-12">
                 <div className="flex justify-between items-start mb-8">
                   <span className="text-[10px] font-black opacity-20 uppercase tracking-[0.3em]">REF / {item.id.slice(-6)}</span>
                   <div className="flex flex-col items-end gap-2">
                     {item.is_archived ? (
-                      <div className="px-3 py-1 text-[8px] uppercase tracking-widest font-black border border-zinc-500 text-zinc-500 bg-zinc-500/5">
-                        Archived
-                      </div>
+                      <div className="px-3 py-1 text-[8px] uppercase tracking-widest font-black border border-zinc-500 text-zinc-500 bg-zinc-500/5">Archived</div>
                     ) : (
-                      <div className={`px-3 py-1 text-[8px] uppercase tracking-widest font-black border ${item.qty > 0 ? "border-emerald-500/20 text-emerald-500 bg-emerald-500/5" : "border-rose-500/20 text-rose-500 bg-rose-500/5"}`}>
+                      <div
+                        className={`px-3 py-1 text-[8px] uppercase tracking-widest font-black border ${item.qty > 0 ? "border-emerald-500/20 text-emerald-500 bg-emerald-500/5" : "border-rose-500/20 text-rose-500 bg-rose-500/5"}`}
+                      >
                         {item.qty > 0 ? "In Stock" : "Sold Out"}
                       </div>
                     )}
                   </div>
                 </div>
-                
+
                 <h3 className="text-2xl font-serif tracking-tight mb-4 leading-tight">{item.name}</h3>
                 <p className={`text-sm mb-8 line-clamp-3 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{item.description}</p>
-                
+
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-black tracking-tighter">{formatRupiah(item.price)}</span>
                   <span className={`text-[10px] uppercase font-bold opacity-30 tracking-widest`}>Qty: {item.qty}</span>
@@ -141,7 +143,7 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
                   </button>
                 )}
                 <button
-                  onClick={() => item.is_archived ? handleRestoreItem(item.id) : handleDeleteItem(item.id)}
+                  onClick={() => (item.is_archived ? handleRestoreItem(item.id) : handleDeleteItem(item.id))}
                   className={`py-6 font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 ${item.is_archived ? "text-emerald-500/60 hover:text-emerald-500" : "text-rose-500/60 hover:text-rose-500"} ${isDark ? "bg-zinc-950 hover:bg-zinc-900" : "bg-white hover:bg-zinc-50"}`}
                 >
                   {item.is_archived ? "Restore" : "Archive"}

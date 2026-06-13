@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
+import { CRUD_URL, AUTH_URL } from "../config";
 
 function Review({ itemId }) {
   const { isDark } = useTheme();
@@ -41,9 +39,9 @@ function Review({ itemId }) {
             const buyerRes = await fetch(`${AUTH_URL}/users/${buyerId}`);
             if (buyerRes.ok) {
               const buyerData = await buyerRes.json();
-              return { 
-                buyerId, 
-                name: buyerData.display_name || buyerData.username || `Client ${buyerId.slice(0, 4)}` 
+              return {
+                buyerId,
+                name: buyerData.display_name || buyerData.username || `Client ${buyerId.slice(0, 4)}`,
               };
             }
           } catch (error) {
@@ -133,7 +131,7 @@ function Review({ itemId }) {
 
     // Optimistic update
     const previousReviews = [...reviews];
-    setReviews(reviews.map(r => r.id === reviewId ? { ...r, reply: replyText } : r));
+    setReviews(reviews.map((r) => (r.id === reviewId ? { ...r, reply: replyText } : r)));
 
     try {
       const res = await fetch(`${CRUD_URL}/reviews/${reviewId}/reply`, {
@@ -145,7 +143,7 @@ function Review({ itemId }) {
       if (!res.ok) {
         throw new Error("Failed to submit reply");
       }
-      
+
       setReplyingTo(null);
       setReplyText("");
     } catch (error) {
@@ -249,14 +247,10 @@ function Review({ itemId }) {
                     className="w-8 h-8 rounded-full object-cover bg-zinc-200 dark:bg-zinc-800"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        buyerInfos[review.buyer_id] || "Client"
-                      )}&background=random`;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(buyerInfos[review.buyer_id] || "Client")}&background=random`;
                     }}
                   />
-                  <span className="text-xs uppercase tracking-widest font-black">
-                    {buyerInfos[review.buyer_id] || `Client ${review.buyer_id}`}
-                  </span>
+                  <span className="text-xs uppercase tracking-widest font-black">{buyerInfos[review.buyer_id] || `Client ${review.buyer_id}`}</span>
                 </div>
                 {renderStars(review.rating)}
               </div>
@@ -267,7 +261,7 @@ function Review({ itemId }) {
                   <div className="flex justify-between items-start mb-4">
                     <span className={`block text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Seller Correspondence</span>
                     {user && user.role === "seller" && item && user.id === item.user_id && (
-                      <button 
+                      <button
                         onClick={() => {
                           setReplyingTo(review.id);
                           setReplyText(review.reply);
@@ -283,7 +277,7 @@ function Review({ itemId }) {
               )}
 
               {user && user.role === "seller" && item && user.id === item.user_id && !review.reply && replyingTo !== review.id && (
-                <button 
+                <button
                   onClick={() => {
                     setReplyingTo(review.id);
                     setReplyText("");

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
+import { CRUD_URL } from "../config";
 
 const CartContext = createContext();
 

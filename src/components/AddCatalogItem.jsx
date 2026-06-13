@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { CRUD_URL } from "../config";
 import Swal from "sweetalert2";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
 
 function AddCatalogItem({ token }) {
   const navigate = useNavigate();

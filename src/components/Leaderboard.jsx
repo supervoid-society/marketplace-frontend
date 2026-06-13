@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
+import { AUTH_URL } from "../config";
 
 function Leaderboard() {
   const { isDark } = useTheme();
@@ -67,17 +66,15 @@ function Leaderboard() {
                   className="w-8 h-8 md:w-12 md:h-12 rounded-full object-cover bg-zinc-200 dark:bg-zinc-800"
                   onError={(e) => {
                     e.target.onerror = null;
-                    const fallbackName = user.display_name && user.display_name !== "undefined" ? user.display_name : (user.username || "User");
+                    const fallbackName = user.display_name && user.display_name !== "undefined" ? user.display_name : user.username || "User";
                     e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackName)}&background=random`;
                   }}
                 />
                 <div>
                   <h3 className="text-sm md:text-xl font-serif tracking-tight mb-1 truncate">
-                    {user.display_name && user.display_name !== "undefined" ? user.display_name : (user.username || "Anonymous Participant")}
+                    {user.display_name && user.display_name !== "undefined" ? user.display_name : user.username || "Anonymous Participant"}
                   </h3>
-                  <span className={`text-[8px] md:text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-                    {user.role}
-                  </span>
+                  <span className={`text-[8px] md:text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{user.role}</span>
                 </div>
               </div>
               <div className="col-span-4 md:col-span-5 text-right">

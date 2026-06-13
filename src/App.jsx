@@ -23,8 +23,7 @@ import Leaderboard from "./components/Leaderboard";
 import Navbar from "./components/Navbar";
 import { useTheme } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
-
-const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL || "http://localhost:8787";
+import { AUTH_URL } from "./config";
 
 function App() {
   const { isDark, toggleTheme } = useTheme();

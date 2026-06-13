@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-
-const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
+import { CRUD_URL } from "../config";
 
 function TransactionStats({ token }) {
   const { isDark } = useTheme();
