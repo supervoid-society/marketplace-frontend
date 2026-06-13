@@ -16,6 +16,10 @@ function CatalogDetail() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
 
+  const token = localStorage.getItem("token");
+  const payload = token ? JSON.parse(atob(token.split(".")[1])) : null;
+  const isBuyer = payload?.role === "buyer";
+
   const formatRupiah = (angka) => {
     return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
@@ -130,45 +134,49 @@ function CatalogDetail() {
               </span>
             </div>
 
-            {/* Quantity selector */}
-            <div className="flex items-center justify-between py-4 border-y border-zinc-100 dark:border-zinc-900">
-              <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Quantity</span>
-              <div className="flex items-center gap-6">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1 || item.qty === 0}
-                  className="opacity-50 hover:opacity-100 disabled:opacity-10 transition-opacity"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                  </svg>
-                </button>
-                <span className="text-xl font-medium min-w-[2ch] text-center">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(Math.min(item.qty || 1, quantity + 1))}
-                  disabled={quantity >= (item.qty || 1) || item.qty === 0}
-                  className="opacity-50 hover:opacity-100 disabled:opacity-10 transition-opacity"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            {isBuyer && (
+              <>
+                {/* Quantity selector */}
+                <div className="flex items-center justify-between py-4 border-y border-zinc-100 dark:border-zinc-900">
+                  <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Quantity</span>
+                  <div className="flex items-center gap-6">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1 || item.qty === 0}
+                      className="opacity-50 hover:opacity-100 disabled:opacity-10 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <span className="text-xl font-medium min-w-[2ch] text-center">{quantity}</span>
+                    <button
+                      onClick={() => setQuantity(Math.min(item.qty || 1, quantity + 1))}
+                      disabled={quantity >= (item.qty || 1) || item.qty === 0}
+                      className="opacity-50 hover:opacity-100 disabled:opacity-10 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={item.qty === 0}
-              className={`w-full py-6 rounded-none text-[10px] uppercase tracking-[0.3em] font-black transition-all duration-300 border ${
-                item.qty > 0
-                  ? isDark
-                    ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
-                    : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
-                  : "bg-transparent border-zinc-200 text-zinc-300 cursor-not-allowed"
-              }`}
-            >
-              {item.qty > 0 ? "Purchase / Add to Bag" : "Currently Unavailable"}
-            </button>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={item.qty === 0}
+                  className={`w-full py-6 rounded-none text-[10px] uppercase tracking-[0.3em] font-black transition-all duration-300 border ${
+                    item.qty > 0
+                      ? isDark
+                        ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
+                        : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
+                      : "bg-transparent border-zinc-200 text-zinc-300 cursor-not-allowed"
+                  }`}
+                >
+                  {item.qty > 0 ? "Purchase / Add to Bag" : "Currently Unavailable"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

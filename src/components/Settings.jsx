@@ -33,6 +33,7 @@ function Settings() {
   useEffect(() => {
     if (token) {
       setUserRole(payload.role);
+      setSecurityForm((prev) => ({ ...prev, newUsername: payload.username }));
       if (payload.role === "admin") setActiveTab("security");
       loadPersonalInfo(payload.role);
     }

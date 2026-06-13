@@ -32,7 +32,7 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
   const handleDeleteItem = async (id) => {
     const result = await Swal.fire({
       title: "Archive Item?",
-      text: "This item will be removed from circulation.",
+      text: "This item will be hidden from the public catalog.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Archive",
@@ -55,52 +55,102 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
     }
   };
 
+  const handleRestoreItem = async (id) => {
+    try {
+      const res = await fetch(`${CRUD_URL}/catalog-items/${id}/restore`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        fetchCatalog();
+        Swal.fire({
+          title: "Item Restored",
+          text: "The item is now live in the catalog.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+          background: isDark ? "#09090b" : "#fff",
+          color: isDark ? "#fff" : "#000",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-between items-baseline mb-12 gap-8">
-        <h2 className="text-4xl font-serif italic">Inventory Control</h2>
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+      <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+        <div>
+          <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">
+            Stock <span className="italic">Room.</span>
+          </h1>
+          <p className={`text-xl max-w-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Oversee your inventory and curated collection.</p>
+        </div>
         {userRole === "seller" && (
           <button
             onClick={() => navigate("/manage-catalog/add")}
-            className={`px-8 py-4 rounded-none font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+            className={`px-10 py-5 rounded-none font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
           >
-            Add To Collection
+            Add New Item
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
-        {catalog.map((item) => (
-          <div key={item.id} className={`p-6 md:p-8 flex flex-col justify-between h-full ${isDark ? "bg-zinc-950" : "bg-white"}`}>
-            <div>
-              <span className="text-[10px] font-black opacity-20 uppercase tracking-widest block mb-4">SKU / {item.id.slice(-6)}</span>
-              <h3 className="text-xl font-serif tracking-tight mb-2 leading-tight">{item.name}</h3>
-              <p className={`text-sm mb-6 line-clamp-2 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{item.description}</p>
-              <p className="text-2xl font-black tracking-tighter mb-4">{formatRupiah(item.price)}</p>
-              <div className="flex items-center gap-2 mb-8">
-                <span className={`text-[10px] uppercase tracking-widest font-bold ${item.qty > 0 ? "text-emerald-500" : "text-rose-500"}`}>Availability / {item.qty} units</span>
+      {catalog.length === 0 ? (
+        <div className="text-center py-32 border border-dashed border-zinc-200 dark:border-zinc-800">
+          <h2 className="text-2xl font-serif italic opacity-40">Your stock room is currently empty.</h2>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px bg-zinc-100 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-900">
+          {catalog.map((item) => (
+            <div key={item.id} className={`p-8 md:p-10 flex flex-col justify-between transition-opacity duration-500 ${isDark ? "bg-zinc-950" : "bg-white"} ${item.is_archived ? "opacity-50" : "opacity-100"}`}>
+              <div className="mb-12">
+                <div className="flex justify-between items-start mb-8">
+                  <span className="text-[10px] font-black opacity-20 uppercase tracking-[0.3em]">REF / {item.id.slice(-6)}</span>
+                  <div className="flex flex-col items-end gap-2">
+                    {item.is_archived ? (
+                      <div className="px-3 py-1 text-[8px] uppercase tracking-widest font-black border border-zinc-500 text-zinc-500 bg-zinc-500/5">
+                        Archived
+                      </div>
+                    ) : (
+                      <div className={`px-3 py-1 text-[8px] uppercase tracking-widest font-black border ${item.qty > 0 ? "border-emerald-500/20 text-emerald-500 bg-emerald-500/5" : "border-rose-500/20 text-rose-500 bg-rose-500/5"}`}>
+                        {item.qty > 0 ? "In Stock" : "Sold Out"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <h3 className="text-2xl font-serif tracking-tight mb-4 leading-tight">{item.name}</h3>
+                <p className={`text-sm mb-8 line-clamp-3 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{item.description}</p>
+                
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black tracking-tighter">{formatRupiah(item.price)}</span>
+                  <span className={`text-[10px] uppercase font-bold opacity-30 tracking-widest`}>Qty: {item.qty}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-px bg-zinc-100 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-900 -mx-8 -mb-8 md:-mx-10 md:-mb-10 mt-auto">
+                {userRole === "seller" && (
+                  <button
+                    onClick={() => !item.is_archived && navigate(`/manage-catalog/${item.id}`)}
+                    disabled={item.is_archived}
+                    className={`py-6 font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 ${item.is_archived ? "opacity-20 cursor-not-allowed" : ""} ${isDark ? "bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100" : "bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-900"}`}
+                  >
+                    Edit
+                  </button>
+                )}
+                <button
+                  onClick={() => item.is_archived ? handleRestoreItem(item.id) : handleDeleteItem(item.id)}
+                  className={`py-6 font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 ${item.is_archived ? "text-emerald-500/60 hover:text-emerald-500" : "text-rose-500/60 hover:text-rose-500"} ${isDark ? "bg-zinc-950 hover:bg-zinc-900" : "bg-white hover:bg-zinc-50"}`}
+                >
+                  {item.is_archived ? "Restore" : "Archive"}
+                </button>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
-              {userRole === "seller" && (
-                <button
-                  onClick={() => navigate(`/manage-catalog/${item.id}`)}
-                  className={`py-4 font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 ${isDark ? "bg-zinc-950 hover:bg-zinc-900" : "bg-white hover:bg-zinc-50"}`}
-                >
-                  Edit
-                </button>
-              )}
-              <button
-                onClick={() => handleDeleteItem(item.id)}
-                className={`py-4 font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 text-rose-500 ${isDark ? "bg-zinc-950 hover:bg-zinc-900" : "bg-white hover:bg-zinc-50"}`}
-              >
-                Archive
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -101,7 +101,7 @@ function Cart() {
                 <div className="flex flex-col items-end gap-4">
                   <div className={`flex items-center gap-4 p-1 border ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
                     <button
-                      onClick={() => updateQuantity(item.id, item.item_id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.item_id, item.item_id, item.quantity - 1)}
                       className="w-8 h-8 flex items-center justify-center opacity-40 hover:opacity-100 transition-opacity"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +110,7 @@ function Cart() {
                     </button>
                     <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.item_id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.item_id, item.item_id, item.quantity + 1)}
                       className="w-8 h-8 flex items-center justify-center opacity-40 hover:opacity-100 transition-opacity"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

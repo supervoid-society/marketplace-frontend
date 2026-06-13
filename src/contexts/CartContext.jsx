@@ -110,6 +110,10 @@ export const CartProvider = ({ children }) => {
     const userRole = getUserRole();
     if (!token || userRole !== "buyer") return;
 
+    if (quantity < 1) {
+      return await removeFromCart(itemId);
+    }
+
     const response = await fetch(`${CRUD_URL}/catalog-items/cart/${itemId}`, {
       method: "PUT",
       headers: {

@@ -87,6 +87,14 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
             )}
             {token && (userRole === "buyer" || userRole === "seller") && (
               <Link
+                to="/wallet"
+                className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
+              >
+                Wallet
+              </Link>
+            )}
+            {token && (userRole === "buyer" || userRole === "seller") && (
+              <Link
                 to="/transaction-history"
                 className={`text-xs uppercase tracking-widest font-medium transition-colors duration-200 ${isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"}`}
               >
@@ -191,7 +199,12 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
                     { to: "/manage-users", label: "Users" },
                   ]
                 : []),
-              ...(token && (userRole === "buyer" || userRole === "seller") ? [{ to: "/transaction-history", label: "History" }] : []),
+              ...(token && (userRole === "buyer" || userRole === "seller")
+                ? [
+                    { to: "/wallet", label: "Wallet" },
+                    { to: "/transaction-history", label: "History" },
+                  ]
+                : []),
               ...(token ? [{ to: "/settings", label: "Settings" }] : []),
             ].map((link) => (
               <Link

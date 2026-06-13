@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
 const CRUD_URL = import.meta.env.VITE_CRUD_SERVICE_URL || "http://localhost:8788";
@@ -52,10 +53,23 @@ function TransactionHistory() {
         <div className="border border-zinc-100 dark:border-zinc-900 space-y-px bg-zinc-100 dark:bg-zinc-900">
           {transactions.map((t) => (
             <div key={t.id} className={`p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 ${isDark ? "bg-zinc-950" : "bg-white"}`}>
-              <div className="flex gap-8">
-                <span className="text-[10px] font-black opacity-20 uppercase tracking-widest mt-1">ID / {t.id.slice(-6)}</span>
+              <div className="flex gap-8 items-center">
+                <Link to={`/catalog/${t.item_id}`} className={`w-20 h-20 md:w-24 md:h-24 border grayscale shrink-0 transition-all duration-300 hover:grayscale-0 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-100 bg-zinc-50"}`}>
+                  <img
+                    src={`${CRUD_URL}/images/${t.item_image_id}`}
+                    alt={t.item_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://placehold.co/400x400/000000/FFFFFF?text=No+Image";
+                    }}
+                  />
+                </Link>
                 <div>
-                  <h2 className="text-xl font-serif tracking-tight mb-1">Acquisition #{t.id.slice(0, 8)}</h2>
+                  <span className="text-[10px] font-black opacity-20 uppercase tracking-widest block mb-2">ID / {t.id.slice(-6)}</span>
+                  <Link to={`/catalog/${t.item_id}`} className="hover:underline hover:underline-offset-4">
+                    <h2 className="text-xl font-serif tracking-tight mb-1">{t.item_name}</h2>
+                  </Link>
                   <p className={`text-[10px] uppercase tracking-[0.2em] font-bold ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
                     {new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                   </p>

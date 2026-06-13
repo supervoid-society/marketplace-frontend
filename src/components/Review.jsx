@@ -41,17 +41,20 @@ function Review({ itemId }) {
             const buyerRes = await fetch(`${AUTH_URL}/users/${buyerId}`);
             if (buyerRes.ok) {
               const buyerData = await buyerRes.json();
-              return { buyerId, username: buyerData.username };
+              return { 
+                buyerId, 
+                name: buyerData.display_name || buyerData.username || `Client ${buyerId.slice(0, 4)}` 
+              };
             }
           } catch (error) {
             console.error(error);
           }
-          return { buyerId, username: `Client ${buyerId}` };
+          return { buyerId, name: `Client ${buyerId.slice(0, 4)}` };
         });
         const buyerInfosArray = await Promise.all(buyerInfoPromises);
         const buyerInfosMap = {};
-        buyerInfosArray.forEach(({ buyerId, username }) => {
-          buyerInfosMap[buyerId] = username;
+        buyerInfosArray.forEach(({ buyerId, name }) => {
+          buyerInfosMap[buyerId] = name;
         });
         setBuyerInfos(buyerInfosMap);
         const token = localStorage.getItem("token");
@@ -120,6 +123,38 @@ function Review({ itemId }) {
       setSubmittingReview(false);
       setShowAddReview(false);
       setNewReview({ rating: 5, comment: "" });
+    }
+  };
+
+  const handleReplySubmit = async (reviewId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setSubmittingReply(true);
+
+    // Optimistic update
+    const previousReviews = [...reviews];
+    setReviews(reviews.map(r => r.id === reviewId ? { ...r, reply: replyText } : r));
+
+    try {
+      const res = await fetch(`${CRUD_URL}/reviews/${reviewId}/reply`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reply: replyText }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to submit reply");
+      }
+      
+      setReplyingTo(null);
+      setReplyText("");
+    } catch (error) {
+      console.error(error);
+      // Rollback on error
+      setReviews(previousReviews);
+      alert("Failed to save reply. Please try again.");
+    } finally {
+      setSubmittingReply(false);
     }
   };
 
@@ -207,15 +242,84 @@ function Review({ itemId }) {
           reviews.map((review) => (
             <div key={review.id} className="relative">
               <div className="flex justify-between items-start mb-6">
-                <span className="text-xs uppercase tracking-widest font-black">{buyerInfos[review.buyer_id] || `Client ${review.buyer_id}`}</span>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={`${AUTH_URL}/users/profile-image/${review.buyer_id}`}
+                    alt="Reviewer"
+                    className="w-8 h-8 rounded-full object-cover bg-zinc-200 dark:bg-zinc-800"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        buyerInfos[review.buyer_id] || "Client"
+                      )}&background=random`;
+                    }}
+                  />
+                  <span className="text-xs uppercase tracking-widest font-black">
+                    {buyerInfos[review.buyer_id] || `Client ${review.buyer_id}`}
+                  </span>
+                </div>
                 {renderStars(review.rating)}
               </div>
               <p className={`text-lg leading-relaxed font-serif ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{review.comment}</p>
 
-              {review.reply && (
+              {review.reply && replyingTo !== review.id && (
                 <div className={`mt-8 ml-8 p-8 border-l-2 ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
-                  <span className={`block text-[10px] uppercase tracking-widest font-black mb-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Seller Correspondence</span>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`block text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Seller Correspondence</span>
+                    {user && user.role === "seller" && item && user.id === item.user_id && (
+                      <button 
+                        onClick={() => {
+                          setReplyingTo(review.id);
+                          setReplyText(review.reply);
+                        }}
+                        className="text-[10px] uppercase font-black opacity-20 hover:opacity-100 transition-opacity"
+                      >
+                        Edit Reply
+                      </button>
+                    )}
+                  </div>
                   <p className={`text-sm leading-relaxed italic ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>{review.reply}</p>
+                </div>
+              )}
+
+              {user && user.role === "seller" && item && user.id === item.user_id && !review.reply && replyingTo !== review.id && (
+                <button 
+                  onClick={() => {
+                    setReplyingTo(review.id);
+                    setReplyText("");
+                  }}
+                  className={`mt-6 text-[10px] uppercase tracking-widest font-black opacity-40 hover:opacity-100 transition-opacity`}
+                >
+                  + Respond to this review
+                </button>
+              )}
+
+              {replyingTo === review.id && (
+                <div className={`mt-8 ml-8 p-8 border ${isDark ? "border-zinc-900 bg-zinc-950/50" : "border-zinc-100 bg-zinc-50/50"}`}>
+                  <span className={`block text-[10px] uppercase tracking-widest font-black mb-6 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Drafting Correspondence</span>
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Your professional response..."
+                    className="w-full py-4 bg-transparent border-b border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors text-sm mb-8"
+                    rows="2"
+                    autoFocus
+                  />
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => handleReplySubmit(review.id)}
+                      disabled={submittingReply}
+                      className={`px-6 py-3 rounded-none font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 ${isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-white"}`}
+                    >
+                      {submittingReply ? "Transmitting..." : "Finalize"}
+                    </button>
+                    <button
+                      onClick={() => setReplyingTo(null)}
+                      className={`px-6 py-3 rounded-none font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border border-zinc-200 dark:border-zinc-800`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
