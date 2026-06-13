@@ -15,6 +15,12 @@ export default {
 
     const response = await env.ASSETS.fetch(request);
 
+    // Debugging: Log available env keys
+    console.log("Pathname:", url.pathname);
+    console.log("Response Content-Type:", response.headers.get("content-type"));
+    console.log("Available Env Keys:", Object.keys(env).join(", "));
+    console.log("VITE_AUTH_SERVICE_URL:", env.VITE_AUTH_SERVICE_URL);
+
     // If the request is for index.html (or a SPA route that serves index.html),
     // inject the environment variables.
     const contentType = response.headers.get("content-type");
