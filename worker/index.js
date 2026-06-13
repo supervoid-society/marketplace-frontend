@@ -26,6 +26,7 @@ export default {
               VITE_AUTH_SERVICE_URL: env.VITE_AUTH_SERVICE_URL,
               VITE_CRUD_SERVICE_URL: env.VITE_CRUD_SERVICE_URL,
             };
+            console.log("Worker Injection:", JSON.stringify(vars));
 
             element.prepend(`<script>window.ENV = ${JSON.stringify(vars)};</script>`, { html: true });
           },
