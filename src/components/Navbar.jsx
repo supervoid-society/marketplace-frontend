@@ -194,6 +194,15 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
                             User CRUD
                           </Link>
                           <Link
+                            to="/platform-settings"
+                            onClick={() => setActiveDropdown(null)}
+                            className={`px-4 py-3 text-[10px] uppercase tracking-widest font-bold transition-colors duration-150 text-left border-t ${
+                              isDark ? "border-zinc-900 hover:text-zinc-50 hover:bg-zinc-900/60" : "border-zinc-100 hover:text-zinc-900 hover:bg-zinc-50"
+                            }`}
+                          >
+                            Platform Settings
+                          </Link>
+                          <Link
                             to="/dashboard"
                             onClick={() => setActiveDropdown(null)}
                             className={`px-4 py-3 text-[10px] uppercase tracking-widest font-bold transition-colors duration-150 text-left border-t ${
@@ -236,62 +245,68 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
                       isDark ? "bg-zinc-950/95 border-zinc-900 text-zinc-400" : "bg-white/95 border-zinc-100 text-zinc-600"
                     }`}
                   >
-                    {userRole !== "admin" && (
+                    {token && (
                       <div className={`p-4 border-b flex flex-col space-y-3 ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
                         <div className="flex items-center justify-between">
                           <span
                             className={`text-[8px] uppercase tracking-widest font-black px-1.5 py-1 rounded-sm border ${
-                              userRole === "seller"
+                              userRole === "admin"
                                 ? isDark
-                                  ? "bg-amber-950/30 border-amber-900/50 text-amber-400"
-                                  : "bg-amber-50 border-amber-200 text-amber-800"
-                                : isDark
-                                  ? "bg-blue-950/30 border-blue-900/50 text-blue-400"
-                                  : "bg-blue-50 border-blue-200 text-blue-800"
+                                  ? "bg-red-950/30 border-red-900/50 text-red-400"
+                                  : "bg-red-50 border-red-200 text-red-800"
+                                : userRole === "seller"
+                                  ? isDark
+                                    ? "bg-amber-950/30 border-amber-900/50 text-amber-400"
+                                    : "bg-amber-50 border-amber-200 text-amber-800"
+                                  : isDark
+                                    ? "bg-blue-950/30 border-blue-900/50 text-blue-400"
+                                    : "bg-blue-50 border-blue-200 text-blue-800"
                             }`}
                           >
-                            {userRole === "seller" ? "Seller Mode" : "Buyer Mode"}
+                            {userRole === "admin" ? "Admin Mode" : userRole === "seller" ? "Seller Mode" : "Buyer Mode"}
                           </span>
                           <span className="text-[10px] font-mono font-bold">{formatBalance(balance)}</span>
                         </div>
-                        <button
-                          onClick={() => {
-                            handleSwitchRole();
-                            setActiveDropdown(null);
-                          }}
-                          className={`w-full py-2 text-[8px] uppercase tracking-widest border transition-all duration-200 font-bold active:scale-95 cursor-pointer text-center ${
-                            isDark
-                              ? "border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-850 hover:text-white"
-                              : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-black"
-                          }`}
-                        >
-                          Switch to {userRole === "buyer" ? "Seller" : "Buyer"}
-                        </button>
+                        {userRole !== "admin" && (
+                          <button
+                            onClick={() => {
+                              handleSwitchRole();
+                              setActiveDropdown(null);
+                            }}
+                            className={`w-full py-2 text-[8px] uppercase tracking-widest border transition-all duration-200 font-bold active:scale-95 cursor-pointer text-center ${
+                              isDark
+                                ? "border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-850 hover:text-white"
+                                : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-black"
+                            }`}
+                          >
+                            Switch to {userRole === "buyer" ? "Seller" : "Buyer"}
+                          </button>
+                        )}
                       </div>
                     )}
 
                     <div className="py-1 flex flex-col">
-                      {userRole !== "admin" && (
-                        <>
-                          <Link
-                            to="/wallet"
-                            onClick={() => setActiveDropdown(null)}
-                            className={`px-4 py-2.5 text-[10px] uppercase tracking-widest font-bold transition-colors duration-150 text-left ${
-                              isDark ? "hover:text-zinc-50 hover:bg-zinc-900/60" : "hover:text-zinc-900 hover:bg-zinc-50"
-                            }`}
-                          >
-                            My Wallet
-                          </Link>
-                          <Link
-                            to="/transaction-history"
-                            onClick={() => setActiveDropdown(null)}
-                            className={`px-4 py-2.5 text-[10px] uppercase tracking-widest font-bold transition-colors duration-150 text-left border-t ${
-                              isDark ? "border-zinc-900 hover:text-zinc-50 hover:bg-zinc-900/60" : "border-zinc-100 hover:text-zinc-900 hover:bg-zinc-50"
-                            }`}
-                          >
-                            History
-                          </Link>
-                        </>
+                      {token && (
+                        <Link
+                          to="/wallet"
+                          onClick={() => setActiveDropdown(null)}
+                          className={`px-4 py-2.5 text-[10px] uppercase tracking-widest font-bold transition-colors duration-150 text-left ${
+                            isDark ? "hover:text-zinc-50 hover:bg-zinc-900/60" : "hover:text-zinc-900 hover:bg-zinc-50"
+                          }`}
+                        >
+                          My Wallet
+                        </Link>
+                      )}
+                      {token && userRole !== "admin" && (
+                        <Link
+                          to="/transaction-history"
+                          onClick={() => setActiveDropdown(null)}
+                          className={`px-4 py-2.5 text-[10px] uppercase tracking-widest font-bold transition-colors duration-150 text-left border-t ${
+                            isDark ? "border-zinc-900 hover:text-zinc-50 hover:bg-zinc-900/60" : "border-zinc-100 hover:text-zinc-900 hover:bg-zinc-50"
+                          }`}
+                        >
+                          History
+                        </Link>
                       )}
                       <Link
                         to="/settings"
@@ -461,6 +476,15 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
                         User CRUD
                       </Link>
                       <Link
+                        to="/platform-settings"
+                        className={`text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-200 ${
+                          isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"
+                        }`}
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Platform Settings
+                      </Link>
+                      <Link
                         to="/dashboard"
                         className={`text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-200 ${
                           isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"
@@ -480,24 +504,28 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
               <div className="space-y-6 pt-2 border-t border-dashed border-zinc-800 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
                   <p className={`text-[8px] uppercase tracking-[0.3em] font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>My Account</p>
-                  {userRole !== "admin" && (
+                  {token && (
                     <span
                       className={`text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm border ${
-                        userRole === "seller"
+                        userRole === "admin"
                           ? isDark
-                            ? "bg-amber-950/30 border-amber-900/50 text-amber-400"
-                            : "bg-amber-50 border-amber-200 text-amber-800"
-                          : isDark
-                            ? "bg-blue-950/30 border-blue-900/50 text-blue-400"
-                            : "bg-blue-50 border-blue-200 text-blue-800"
+                            ? "bg-red-950/30 border-red-900/50 text-red-400"
+                            : "bg-red-50 border-red-200 text-red-800"
+                          : userRole === "seller"
+                            ? isDark
+                              ? "bg-amber-950/30 border-amber-900/50 text-amber-400"
+                              : "bg-amber-50 border-amber-200 text-amber-800"
+                            : isDark
+                              ? "bg-blue-950/30 border-blue-900/50 text-blue-400"
+                              : "bg-blue-50 border-blue-200 text-blue-800"
                       }`}
                     >
-                      {userRole === "seller" ? "Seller Mode" : "Buyer Mode"}
+                      {userRole === "admin" ? "Admin Mode" : userRole === "seller" ? "Seller Mode" : "Buyer Mode"}
                     </span>
                   )}
                 </div>
 
-                {userRole !== "admin" && (
+                {token && (
                   <div
                     className={`flex items-center justify-between px-3 py-2.5 border ${
                       isDark ? "border-zinc-900 bg-zinc-900/40 text-zinc-300" : "border-zinc-100 bg-zinc-50 text-zinc-700"
@@ -509,27 +537,27 @@ const Navbar = ({ token, userRole, balance, isDark, toggleTheme, menuOpen, setMe
                 )}
 
                 <div className="flex flex-col space-y-3 pl-2">
-                  {userRole !== "admin" && (
-                    <>
-                      <Link
-                        to="/wallet"
-                        className={`text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-200 ${
-                          isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"
-                        }`}
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        My Wallet
-                      </Link>
-                      <Link
-                        to="/transaction-history"
-                        className={`text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-200 ${
-                          isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"
-                        }`}
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        History
-                      </Link>
-                    </>
+                  {token && (
+                    <Link
+                      to="/wallet"
+                      className={`text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-200 ${
+                        isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"
+                      }`}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      My Wallet
+                    </Link>
+                  )}
+                  {token && userRole !== "admin" && (
+                    <Link
+                      to="/transaction-history"
+                      className={`text-xs uppercase tracking-[0.2em] font-bold transition-colors duration-200 ${
+                        isDark ? "text-zinc-400 hover:text-zinc-50" : "text-zinc-500 hover:text-zinc-900"
+                      }`}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      History
+                    </Link>
                   )}
                   <Link
                     to="/settings"

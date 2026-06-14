@@ -15,9 +15,13 @@ function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState("");
   const [progress, setProgress] = useState(0);
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState("");
+  const [platformSettings, setPlatformSettings] = useState(null);
 
   const formatRupiah = (angka) => {
-    return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return "Rp " + Number(angka).toLocaleString("id-ID");
   };
 
   const getUserFromToken = () => {
@@ -51,12 +55,101 @@ function Checkout() {
       }
     };
 
+    const fetchPlatformSettings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${CRUD_URL}/admin-features/platform-settings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPlatformSettings(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch platform settings:", error);
+      }
+    };
+
     fetchBalance();
+    fetchPlatformSettings();
     setLoading(false);
   }, [cart]);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const canCheckout = cart.length > 0 && total <= balance;
+
+  let platformFee = 0;
+  let discountAmount = 0;
+
+  cart.forEach((item, index) => {
+    const itemAmount = item.price * item.quantity;
+    if (platformSettings) {
+      const { fee_type, fee_percentage, fee_fixed } = platformSettings;
+      if (fee_type === "percentage") {
+        platformFee += itemAmount * (fee_percentage / 100);
+      } else if (fee_type === "fixed") {
+        platformFee += fee_fixed;
+      } else if (fee_type === "both") {
+        platformFee += (itemAmount * (fee_percentage / 100)) + fee_fixed;
+      }
+    }
+
+    if (appliedPromo) {
+      const { type, value } = appliedPromo;
+      if (type === "percentage") {
+        discountAmount += itemAmount * (value / 100);
+      } else if (type === "fixed" && index === 0) {
+        discountAmount += Math.min(value, itemAmount);
+      }
+    }
+  });
+
+  if (appliedPromo && appliedPromo.type === "percentage") {
+    discountAmount = Math.min(discountAmount, total);
+  }
+
+  const finalTotal = total + platformFee - discountAmount;
+  const canCheckout = cart.length > 0 && finalTotal <= balance;
+
+  const handleValidatePromo = async () => {
+    if (!promoCode) return;
+    setPromoError("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${CRUD_URL}/admin-features/promos/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: promoCode }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setAppliedPromo(data);
+        Swal.fire({
+          icon: "success",
+          title: "Promo Applied",
+          text: `Kode promo ${data.code} berhasil dipasang!`,
+          timer: 1500,
+          showConfirmButton: false,
+          background: isDark ? "#09090b" : "#fff",
+          color: isDark ? "#fff" : "#000",
+        });
+      } else {
+        setAppliedPromo(null);
+        setPromoError(data.error || "Invalid promo code.");
+      }
+    } catch (error) {
+      setPromoError("Failed to validate promo code.");
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+    setPromoError("");
+  };
 
   const handlePayment = async () => {
     const user = getUserFromToken();
@@ -102,7 +195,10 @@ function Checkout() {
     setProcessingMessage("Payment Authorized.");
 
     try {
+      let isPromoApplied = false;
       for (const item of cart) {
+        const shouldApplyPromo = appliedPromo && (!isPromoApplied || appliedPromo?.type === 'percentage');
+        
         const checkoutRes = await fetch(`${CRUD_URL}/transactions/checkout`, {
           method: "POST",
           headers: {
@@ -114,10 +210,14 @@ function Checkout() {
             quantity: item.quantity,
             balance: balanceData.balance,
             signature: balanceData.signature,
+            promoCode: shouldApplyPromo ? appliedPromo.code : undefined,
           }),
         });
 
-        if (!checkoutRes.ok) throw new Error(`Checkout failed for ${item.name}`);
+        if (!checkoutRes.ok) {
+          const errData = await checkoutRes.json();
+          throw new Error(errData.error || `Checkout failed for ${item.name}`);
+        }
 
         const checkoutData = await checkoutRes.json();
         const { transactionId, sellerId, amount, signature } = checkoutData;
@@ -131,17 +231,24 @@ function Checkout() {
           body: JSON.stringify({ transactionId, sellerId, amount, signature }),
         });
 
-        if (!transferRes.ok) throw new Error(`Transfer failed for ${item.name}`);
+        if (!transferRes.ok) {
+          const errData = await transferRes.json();
+          throw new Error(errData.error || `Transfer failed for ${item.name}`);
+        }
+
+        if (shouldApplyPromo) {
+          isPromoApplied = true;
+        }
       }
     } catch (error) {
       setIsProcessing(false);
-      Swal.fire({ icon: "error", title: "Payment Failed", text: error.message });
+      Swal.fire({ icon: "error", title: "Payment Failed", text: error.message, background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000" });
       return;
     }
     await clearCart();
     window.dispatchEvent(new CustomEvent("balanceChanged"));
     setIsProcessing(false);
-    Swal.fire({ icon: "success", title: "Purchase Complete" });
+    Swal.fire({ icon: "success", title: "Purchase Complete", background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000" });
     navigate("/transaction-history");
   };
 
@@ -219,16 +326,80 @@ function Checkout() {
                 ))}
               </div>
 
+              {/* Promo Code Input Block */}
+              <div className="my-8 pt-8 border-t border-dashed border-zinc-200 dark:border-zinc-800">
+                <label className="block text-[8px] uppercase tracking-widest font-black opacity-60 mb-2">Promo Code</label>
+                <div className="flex gap-4">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => {
+                      setPromoCode(e.target.value);
+                      setPromoError("");
+                    }}
+                    disabled={appliedPromo}
+                    placeholder="Enter code (e.g. DISCOUNT10)"
+                    className="flex-1 bg-transparent border-b focus:outline-none uppercase tracking-wider font-mono text-sm py-2"
+                  />
+                  {appliedPromo ? (
+                    <button
+                      type="button"
+                      onClick={handleRemovePromo}
+                      className="px-4 py-2 border border-rose-500/20 text-rose-500 text-[10px] uppercase font-black hover:bg-rose-500/10 cursor-pointer transition-all"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleValidatePromo}
+                      disabled={!promoCode}
+                      className={`px-6 py-2 border text-[10px] uppercase font-black cursor-pointer transition-all ${
+                        promoCode
+                          ? isDark
+                            ? "bg-zinc-100 border-zinc-100 text-zinc-900 hover:bg-transparent hover:text-zinc-100"
+                            : "bg-zinc-900 border-zinc-900 text-white hover:bg-transparent hover:text-zinc-900"
+                          : "border-zinc-200 text-zinc-300 cursor-not-allowed"
+                      }`}
+                    >
+                      Apply
+                    </button>
+                  )}
+                </div>
+                {promoError && <p className="text-[10px] font-bold text-rose-500 mt-2">{promoError}</p>}
+                {appliedPromo && (
+                  <p className="text-[10px] font-bold text-emerald-500 mt-2">
+                    Promo applied: {appliedPromo.type === "percentage" ? `${appliedPromo.value}%` : formatRupiah(appliedPromo.value)} discount.
+                  </p>
+                )}
+              </div>
+
               <div className="border-t border-zinc-200 dark:border-zinc-800 pt-8 space-y-4">
-                <div className="flex justify-between items-end">
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-black">Total Amount</span>
-                  <span className="text-3xl font-black tracking-tighter">{formatRupiah(total)}</span>
-                </div>
                 <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
-                  <span className={isDark ? "text-zinc-600" : "text-zinc-400"}>Current Balance</span>
-                  <span className={total > balance ? "text-rose-500" : ""}>{formatRupiah(balance)}</span>
+                  <span className={isDark ? "text-zinc-650" : "text-zinc-400"}>Subtotal</span>
+                  <span>{formatRupiah(total)}</span>
                 </div>
-                {total > balance && <p className="text-center text-[10px] uppercase tracking-widest font-black text-rose-500 mt-4">Insufficient funds for this transaction.</p>}
+                {platformFee > 0 && (
+                  <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
+                    <span className={isDark ? "text-zinc-600" : "text-zinc-400"}>Platform Fee</span>
+                    <span>+ {formatRupiah(platformFee)}</span>
+                  </div>
+                )}
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold text-emerald-500">
+                    <span>Discount Promo ({appliedPromo?.code})</span>
+                    <span>- {formatRupiah(discountAmount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-end border-t border-zinc-100 dark:border-zinc-900 pt-4">
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-black">Total Amount</span>
+                  <span className="text-3xl font-black tracking-tighter">{formatRupiah(finalTotal)}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold pt-2">
+                  <span className={isDark ? "text-zinc-600" : "text-zinc-400"}>Current Balance</span>
+                  <span className={finalTotal > balance ? "text-rose-500" : ""}>{formatRupiah(balance)}</span>
+                </div>
+                {finalTotal > balance && <p className="text-center text-[10px] uppercase tracking-widest font-black text-rose-500 mt-4">Insufficient funds for this transaction.</p>}
               </div>
             </div>
 

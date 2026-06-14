@@ -19,6 +19,7 @@ import TransactionStats from "./components/TransactionStats";
 import WalletPage from "./components/WalletPage";
 import Leaderboard from "./components/Leaderboard";
 import Navbar from "./components/Navbar";
+import AdminPlatformSettings from "./components/AdminPlatformSettings";
 import { useTheme } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import { AUTH_URL } from "./config";
@@ -55,10 +56,12 @@ function App() {
 
   // Function to fetch balance
   const fetchBalance = async (userId, role) => {
-    if (!userId || !role || role === "admin" || balanceFetched) return;
+    if (!userId || !role || balanceFetched) return;
     try {
+      setMenuOpen(false); // just side effect to reset
       setBalanceFetched(true);
-      const res = await fetch(`${AUTH_URL}/auth/balance/${userId}/${role}`);
+      const queryRole = role === "admin" ? "buyer" : role;
+      const res = await fetch(`${AUTH_URL}/auth/balance/${userId}/${queryRole}`);
       const data = await res.json();
       setBalance(data.balance || 0);
     } catch (error) {
@@ -158,9 +161,10 @@ function App() {
             <Route path="/manage-catalog/add" element={token && (userRole === "admin" || userRole === "seller") ? <AddCatalogItem token={token} /> : <Navigate to="/" />} />
             <Route path="/manage-catalog/:id" element={token && (userRole === "admin" || userRole === "seller") ? <EditCatalogItem token={token} /> : <Navigate to="/" />} />
             <Route path="/manage-users" element={token && userRole === "admin" ? <UserCRUD token={token} /> : <Navigate to="/" />} />
+            <Route path="/platform-settings" element={token && userRole === "admin" ? <AdminPlatformSettings /> : <Navigate to="/" />} />
             <Route path="/settings" element={token ? <Settings token={token} userRole={userRole} /> : <Navigate to="/" />} />
             <Route path="/transaction-history" element={token && (userRole === "buyer" || userRole === "seller") ? <TransactionHistory /> : <Navigate to="/" />} />
-            <Route path="/wallet" element={token && (userRole === "buyer" || userRole === "seller") ? <WalletPage /> : <Navigate to="/" />} />
+            <Route path="/wallet" element={token && (userRole === "buyer" || userRole === "seller" || userRole === "admin") ? <WalletPage /> : <Navigate to="/" />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
           </Routes>
         </div>

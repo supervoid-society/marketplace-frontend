@@ -271,64 +271,80 @@ function WalletPage() {
       </div>
 
       {/* Dual Account Wallets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 w-full">
-        {/* Member Wallet Card */}
+      <div className={`grid grid-cols-1 ${payload.role === "admin" ? "md:grid-cols-1" : "md:grid-cols-2"} gap-6 mb-16 w-full`}>
+        {/* Member/Admin Wallet Card */}
         <div
           className={`p-6 border flex flex-col justify-between rounded-lg ${
             payload.role === "buyer"
               ? isDark
                 ? "border-blue-900 bg-blue-950/10 text-zinc-100"
                 : "border-blue-200 bg-blue-50/20 text-zinc-900"
-              : isDark
-                ? "border-zinc-900 bg-zinc-950 text-zinc-400"
-                : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
+              : payload.role === "admin"
+                ? isDark
+                  ? "border-red-900 bg-red-950/10 text-zinc-100"
+                  : "border-red-200 bg-red-50/20 text-zinc-900"
+                : isDark
+                  ? "border-zinc-900 bg-zinc-950 text-zinc-400"
+                  : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
           }`}
         >
           <div className="flex justify-between items-center mb-4 gap-4">
-            <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">Member Wallet (Buyer)</span>
-            {payload.role === "buyer" && (
-              <span className="text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm bg-blue-500/10 text-blue-500 border border-blue-500/20">Active</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">
+              {payload.role === "admin" ? "Platform Admin Wallet" : "Member Wallet (Buyer)"}
+            </span>
+            {(payload.role === "buyer" || payload.role === "admin") && (
+              <span
+                className={`text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm border ${
+                  payload.role === "admin"
+                    ? "bg-red-500/10 text-red-500 border-red-500/20"
+                    : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                }`}
+              >
+                Active
+              </span>
             )}
           </div>
           <span className="text-3xl font-black font-mono tracking-tight break-all">{formatRupiah(buyerBalance)}</span>
         </div>
 
         {/* Merchant Wallet Card */}
-        <div
-          className={`p-6 border flex flex-col justify-between rounded-lg ${
-            payload.role === "seller"
-              ? isDark
-                ? "border-amber-900 bg-amber-950/10 text-zinc-100"
-                : "border-amber-200 bg-amber-50/20 text-zinc-900"
-              : isDark
-                ? "border-zinc-900 bg-zinc-950 text-zinc-400"
-                : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
-          }`}
-        >
-          <div className="flex justify-between items-center mb-4 gap-4">
-            <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">Merchant Wallet (Seller)</span>
-            {payload.role === "seller" && (
-              <span className="text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm bg-amber-500/10 text-amber-500 border border-amber-500/20">Active</span>
+        {payload.role !== "admin" && (
+          <div
+            className={`p-6 border flex flex-col justify-between rounded-lg ${
+              payload.role === "seller"
+                ? isDark
+                  ? "border-amber-900 bg-amber-950/10 text-zinc-100"
+                  : "border-amber-200 bg-amber-50/20 text-zinc-900"
+                : isDark
+                  ? "border-zinc-900 bg-zinc-950 text-zinc-400"
+                  : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
+            }`}
+          >
+            <div className="flex justify-between items-center mb-4 gap-4">
+              <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">Merchant Wallet (Seller)</span>
+              {payload.role === "seller" && (
+                <span className="text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm bg-amber-500/10 text-amber-500 border border-amber-500/20">Active</span>
+              )}
+            </div>
+            {sellerBalance === null ? (
+              <div className="flex flex-col items-start space-y-2">
+                <span className="text-xs italic opacity-50">Belum Buka Toko</span>
+                <button
+                  onClick={() => navigate("/seller-onboarding")}
+                  className={`py-1.5 px-3 rounded-none text-[8px] uppercase tracking-widest font-bold border transition-all duration-200 cursor-pointer ${
+                    isDark
+                      ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
+                      : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
+                  }`}
+                >
+                  Onboarding
+                </button>
+              </div>
+            ) : (
+              <span className="text-3xl font-black font-mono tracking-tight break-all">{formatRupiah(sellerBalance)}</span>
             )}
           </div>
-          {sellerBalance === null ? (
-            <div className="flex flex-col items-start space-y-2">
-              <span className="text-xs italic opacity-50">Belum Buka Toko</span>
-              <button
-                onClick={() => navigate("/seller-onboarding")}
-                className={`py-1.5 px-3 rounded-none text-[8px] uppercase tracking-widest font-bold border transition-all duration-200 cursor-pointer ${
-                  isDark
-                    ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
-                    : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
-                }`}
-              >
-                Onboarding
-              </button>
-            </div>
-          ) : (
-            <span className="text-3xl font-black font-mono tracking-tight break-all">{formatRupiah(sellerBalance)}</span>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
