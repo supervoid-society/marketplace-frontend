@@ -134,7 +134,7 @@ function CatalogDetail() {
           {seller && (
             <div className="mb-12 flex items-center gap-4">
               <img
-                src={`${AUTH_URL}/users/profile-image/${item.user_id}`}
+                src={`${AUTH_URL}/users/profile-image/${item.user_id}?role=seller`}
                 alt={seller.store_name}
                 className="w-12 h-12 rounded-full object-cover border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900"
                 onError={(e) => {

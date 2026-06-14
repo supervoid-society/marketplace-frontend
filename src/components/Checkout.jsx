@@ -9,15 +9,7 @@ import Swal from "sweetalert2";
 function Checkout() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const {
-    cart,
-    clearCart,
-    appliedPromo,
-    platformFee,
-    discountAmount,
-    finalTotal,
-    subtotal
-  } = useCart();
+  const { cart, clearCart, appliedPromo, platformFee, discountAmount, finalTotal, subtotal } = useCart();
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);

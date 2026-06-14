@@ -74,7 +74,7 @@ function SellerPage() {
           <div className="flex flex-col md:flex-row gap-16 items-start md:items-end">
             <div className={`w-48 h-64 border ${isDark ? "border-zinc-800" : "border-zinc-100"} flex-shrink-0 grayscale`}>
               {seller.image_id ? (
-                <img src={`${AUTH_URL}/users/profile-image/${userId}`} alt={seller.store_name} className="w-full h-full object-cover" />
+                <img src={`${AUTH_URL}/users/profile-image/${userId}?role=seller`} alt={seller.store_name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-[10px] uppercase tracking-widest opacity-20">Portrait</div>
               )}

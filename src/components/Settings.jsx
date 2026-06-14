@@ -54,7 +54,7 @@ function Settings() {
         });
         setDeleteImage(false);
         if (data.image_id) {
-          const imgRes = await fetch(`${AUTH_URL}/users/profile-image/${payload.userId}`);
+          const imgRes = await fetch(`${AUTH_URL}/users/profile-image/${payload.userId}?role=${role}`);
           setHasProfileImage(imgRes.ok);
         } else {
           setHasProfileImage(false);
@@ -239,7 +239,11 @@ function Settings() {
                     <div className="flex items-center gap-10">
                       <div className={`w-24 h-32 border grayscale ${isDark ? "border-zinc-800 bg-zinc-950" : "border-zinc-100 bg-zinc-50"}`}>
                         {personalForm.imagePreview || (hasProfileImage && !deleteImage) ? (
-                          <img src={personalForm.imagePreview || `${AUTH_URL}/users/profile-image/${payload.userId}`} className="w-full h-full object-cover" alt="Profile" />
+                          <img
+                            src={personalForm.imagePreview || `${AUTH_URL}/users/profile-image/${payload.userId}?role=${payload.role}`}
+                            className="w-full h-full object-cover"
+                            alt="Profile"
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[8px] uppercase tracking-widest opacity-20">None</div>
                         )}

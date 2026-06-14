@@ -7,17 +7,7 @@ import Swal from "sweetalert2";
 
 function Cart() {
   const { isDark } = useTheme();
-  const {
-    cart,
-    updateCartItem,
-    clearCart,
-    appliedPromo,
-    setAppliedPromo,
-    platformFee,
-    discountAmount,
-    finalTotal,
-    subtotal,
-  } = useCart();
+  const { cart, updateCartItem, clearCart, appliedPromo, setAppliedPromo, platformFee, discountAmount, finalTotal, subtotal } = useCart();
   const [stockCache, setStockCache] = useState({});
   const [lastStockFetch, setLastStockFetch] = useState({});
   const [promoCode, setPromoCode] = useState(appliedPromo ? appliedPromo.code : "");
@@ -32,7 +22,12 @@ function Cart() {
   }, [appliedPromo]);
 
   const formatRupiah = (angka) => {
-    return "Rp " + Number(angka).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return (
+      "Rp " +
+      Number(angka)
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+    );
   };
 
   const handleValidatePromo = async () => {

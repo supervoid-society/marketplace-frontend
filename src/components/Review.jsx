@@ -286,7 +286,7 @@ function Review({ itemId }) {
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-3">
                   <img
-                    src={`${AUTH_URL}/users/profile-image/${review.buyer_id}`}
+                    src={`${AUTH_URL}/users/profile-image/${review.buyer_id}?role=buyer`}
                     alt="Reviewer"
                     className="w-8 h-8 rounded-full object-cover bg-zinc-200 dark:bg-zinc-800"
                     onError={(e) => {
@@ -367,7 +367,7 @@ function Review({ itemId }) {
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
                       <img
-                        src={`${AUTH_URL}/users/profile-image/${item?.user_id}`}
+                        src={`${AUTH_URL}/users/profile-image/${item?.user_id}?role=seller`}
                         alt="Seller"
                         className="w-8 h-8 rounded-full object-cover bg-zinc-200 dark:bg-zinc-800"
                         onError={(e) => {
