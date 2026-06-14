@@ -169,6 +169,14 @@ function WalletPage() {
     }
   };
 
+  const handleSwapDirection = () => {
+    if (sellerBalance === null) return;
+    setInternalTransfer((prev) => ({
+      ...prev,
+      direction: prev.direction === "member_to_merchant" ? "merchant_to_member" : "member_to_merchant",
+    }));
+  };
+
   const handleInternalTransfer = async (e) => {
     e.preventDefault();
     const { direction, amount: moveAmount } = internalTransfer;
@@ -257,71 +265,69 @@ function WalletPage() {
 
   return (
     <div className="py-12 px-6 max-w-6xl mx-auto">
-      <div className="flex flex-col lg:flex-row justify-between items-start mb-16 gap-8 w-full">
-        <div>
-          <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">Wallet.</h1>
-          <p className={`text-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Manage your capital and peer-to-peer transfers.</p>
-        </div>
+      <div className="mb-12">
+        <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">Wallet.</h1>
+        <p className={`text-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Manage your capital and peer-to-peer transfers.</p>
+      </div>
 
-        {/* Dual Account Wallets */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto lg:min-w-[500px]">
-          {/* Member Wallet Card */}
-          <div
-            className={`p-6 border flex flex-col justify-between rounded-none ${
-              payload.role === "buyer"
-                ? isDark
-                  ? "border-blue-900 bg-blue-950/10 text-zinc-100"
-                  : "border-blue-200 bg-blue-50/20 text-zinc-900"
-                : isDark
-                  ? "border-zinc-900 bg-zinc-950 text-zinc-400"
-                  : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
-            }`}
-          >
-            <div className="flex justify-between items-center mb-4 gap-4">
-              <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">Member Wallet (Buyer)</span>
-              {payload.role === "buyer" && (
-                <span className="text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm bg-blue-500/10 text-blue-500 border border-blue-500/20">Active</span>
-              )}
-            </div>
-            <span className="text-2xl font-black font-mono tracking-tight">{formatRupiah(buyerBalance)}</span>
-          </div>
-
-          {/* Merchant Wallet Card */}
-          <div
-            className={`p-6 border flex flex-col justify-between rounded-none ${
-              payload.role === "seller"
-                ? isDark
-                  ? "border-amber-900 bg-amber-950/10 text-zinc-100"
-                  : "border-amber-200 bg-amber-50/20 text-zinc-900"
-                : isDark
-                  ? "border-zinc-900 bg-zinc-950 text-zinc-400"
-                  : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
-            }`}
-          >
-            <div className="flex justify-between items-center mb-4 gap-4">
-              <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">Merchant Wallet (Seller)</span>
-              {payload.role === "seller" && (
-                <span className="text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm bg-amber-500/10 text-amber-500 border border-amber-500/20">Active</span>
-              )}
-            </div>
-            {sellerBalance === null ? (
-              <div className="flex flex-col items-start space-y-2">
-                <span className="text-xs italic opacity-50">Belum Buka Toko</span>
-                <button
-                  onClick={() => navigate("/seller-onboarding")}
-                  className={`py-1.5 px-3 rounded-none text-[8px] uppercase tracking-widest font-bold border transition-all duration-200 cursor-pointer ${
-                    isDark
-                      ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
-                      : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
-                  }`}
-                >
-                  Onboarding
-                </button>
-              </div>
-            ) : (
-              <span className="text-2xl font-black font-mono tracking-tight">{formatRupiah(sellerBalance)}</span>
+      {/* Dual Account Wallets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 w-full">
+        {/* Member Wallet Card */}
+        <div
+          className={`p-6 border flex flex-col justify-between rounded-lg ${
+            payload.role === "buyer"
+              ? isDark
+                ? "border-blue-900 bg-blue-950/10 text-zinc-100"
+                : "border-blue-200 bg-blue-50/20 text-zinc-900"
+              : isDark
+                ? "border-zinc-900 bg-zinc-950 text-zinc-400"
+                : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
+          }`}
+        >
+          <div className="flex justify-between items-center mb-4 gap-4">
+            <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">Member Wallet (Buyer)</span>
+            {payload.role === "buyer" && (
+              <span className="text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm bg-blue-500/10 text-blue-500 border border-blue-500/20">Active</span>
             )}
           </div>
+          <span className="text-3xl font-black font-mono tracking-tight break-all">{formatRupiah(buyerBalance)}</span>
+        </div>
+
+        {/* Merchant Wallet Card */}
+        <div
+          className={`p-6 border flex flex-col justify-between rounded-lg ${
+            payload.role === "seller"
+              ? isDark
+                ? "border-amber-900 bg-amber-950/10 text-zinc-100"
+                : "border-amber-200 bg-amber-50/20 text-zinc-900"
+              : isDark
+                ? "border-zinc-900 bg-zinc-950 text-zinc-400"
+                : "border-zinc-100 bg-zinc-50/30 text-zinc-600"
+          }`}
+        >
+          <div className="flex justify-between items-center mb-4 gap-4">
+            <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">Merchant Wallet (Seller)</span>
+            {payload.role === "seller" && (
+              <span className="text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm bg-amber-500/10 text-amber-500 border border-amber-500/20">Active</span>
+            )}
+          </div>
+          {sellerBalance === null ? (
+            <div className="flex flex-col items-start space-y-2">
+              <span className="text-xs italic opacity-50">Belum Buka Toko</span>
+              <button
+                onClick={() => navigate("/seller-onboarding")}
+                className={`py-1.5 px-3 rounded-none text-[8px] uppercase tracking-widest font-bold border transition-all duration-200 cursor-pointer ${
+                  isDark
+                    ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
+                    : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
+                }`}
+              >
+                Onboarding
+              </button>
+            </div>
+          ) : (
+            <span className="text-3xl font-black font-mono tracking-tight break-all">{formatRupiah(sellerBalance)}</span>
+          )}
         </div>
       </div>
 
@@ -372,76 +378,87 @@ function WalletPage() {
               )}
             </div>
           ) : activeTab === "internal" ? (
-            <form onSubmit={handleInternalTransfer} className="space-y-8">
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest font-black mb-4">Transfer Direction</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleInternalTransfer} className="space-y-6 max-w-lg">
+              <div className="relative flex flex-col gap-2">
+                {/* FROM CARD */}
+                <div className={`p-5 border transition-colors rounded-lg ${isDark ? "bg-zinc-900/40 border-zinc-800" : "bg-zinc-50/50 border-zinc-200"}`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] uppercase tracking-widest font-black opacity-60">From</span>
+                    <span className="text-[10px] font-mono opacity-60">
+                      Balance: {formatRupiah(internalTransfer.direction === "member_to_merchant" ? buyerBalance : sellerBalance || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center gap-4">
+                    <span className="text-lg font-serif font-medium">{internalTransfer.direction === "member_to_merchant" ? "Member Wallet" : "Merchant Wallet"}</span>
+                    <div className="flex-1 max-w-[200px]">
+                      <input
+                        type="number"
+                        value={internalTransfer.amount}
+                        onChange={(e) => setInternalTransfer({ ...internalTransfer, amount: e.target.value })}
+                        placeholder="0"
+                        disabled={sellerBalance === null}
+                        className="w-full text-right text-3xl font-black tracking-tighter bg-transparent border-b border-transparent focus:border-zinc-900 dark:focus:border-zinc-100 focus:outline-none transition-colors font-mono py-1"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SWAP BUTTON */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                   <button
                     type="button"
-                    onClick={() => setInternalTransfer({ ...internalTransfer, direction: "member_to_merchant" })}
+                    onClick={handleSwapDirection}
                     disabled={sellerBalance === null}
-                    className={`p-6 border text-left flex flex-col justify-between rounded-none transition-all duration-200 active:scale-[0.98] cursor-pointer ${
-                      internalTransfer.direction === "member_to_merchant"
-                        ? isDark
-                          ? "border-amber-500/50 bg-amber-500/5 text-amber-500"
-                          : "border-amber-500 bg-amber-500/5 text-amber-700"
-                        : isDark
-                          ? "border-zinc-900 bg-zinc-950 text-zinc-400 hover:border-zinc-800"
-                          : "border-zinc-200 bg-white text-zinc-650 hover:border-zinc-300"
+                    className={`w-10 h-10 rounded-full border flex items-center justify-center shadow-md active:scale-95 transition-all duration-200 cursor-pointer ${
+                      isDark
+                        ? "bg-zinc-950 border-zinc-800 text-zinc-100 hover:border-zinc-700 hover:bg-zinc-900"
+                        : "bg-white border-zinc-200 text-zinc-900 hover:border-zinc-300 hover:bg-zinc-50"
                     } disabled:opacity-20 disabled:cursor-not-allowed`}
+                    title="Swap direction"
                   >
-                    <span className="text-[9px] uppercase tracking-wider font-bold mb-2">Member → Merchant</span>
-                    <span className="text-xs opacity-60">Move funds from Member (shopping) to Merchant (selling) wallet</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setInternalTransfer({ ...internalTransfer, direction: "merchant_to_member" })}
-                    disabled={sellerBalance === null}
-                    className={`p-6 border text-left flex flex-col justify-between rounded-none transition-all duration-200 active:scale-[0.98] cursor-pointer ${
-                      internalTransfer.direction === "merchant_to_member"
-                        ? isDark
-                          ? "border-blue-500/50 bg-blue-500/5 text-blue-500"
-                          : "border-blue-500 bg-blue-500/5 text-blue-700"
-                        : isDark
-                          ? "border-zinc-900 bg-zinc-950 text-zinc-400 hover:border-zinc-800"
-                          : "border-zinc-200 bg-white text-zinc-650 hover:border-zinc-300"
-                    } disabled:opacity-20 disabled:cursor-not-allowed`}
-                  >
-                    <span className="text-[9px] uppercase tracking-wider font-bold mb-2">Merchant → Member</span>
-                    <span className="text-xs opacity-60">Move funds from Merchant (selling) to Member (shopping) wallet</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
                   </button>
                 </div>
-                {sellerBalance === null && (
-                  <p className="text-[10px] mt-2 text-rose-500 font-bold uppercase tracking-wider">
-                    * Buka toko (onboarding merchant) terlebih dahulu untuk membuka fitur transfer internal.
-                  </p>
-                )}
+
+                {/* TO CARD */}
+                <div className={`p-5 border transition-colors rounded-lg ${isDark ? "bg-zinc-900/40 border-zinc-800" : "bg-zinc-50/50 border-zinc-200"}`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] uppercase tracking-widest font-black opacity-60">To</span>
+                    <span className="text-[10px] font-mono opacity-60">
+                      Balance: {formatRupiah(internalTransfer.direction === "member_to_merchant" ? sellerBalance || 0 : buyerBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-serif font-medium">{internalTransfer.direction === "member_to_merchant" ? "Merchant Wallet" : "Member Wallet"}</span>
+                    {internalTransfer.amount && Number(internalTransfer.amount) > 0 && (
+                      <span className="text-sm font-mono font-bold text-emerald-500 animate-fade-in">+ {formatRupiah(Number(internalTransfer.amount))}</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest font-black mb-4">Amount to Move (IDR)</label>
-                <input
-                  type="number"
-                  value={internalTransfer.amount}
-                  onChange={(e) => setInternalTransfer({ ...internalTransfer, amount: e.target.value })}
-                  placeholder="0"
-                  disabled={sellerBalance === null}
-                  className="w-full py-4 text-4xl font-black tracking-tighter bg-transparent border-b border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors disabled:opacity-30 font-mono"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || sellerBalance === null || !internalTransfer.amount}
-                className={`w-full py-6 rounded-none font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 border cursor-pointer ${
-                  isDark
-                    ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
-                    : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
-                } disabled:opacity-20`}
-              >
-                {loading ? "Processing..." : "Execute Internal Transfer"}
-              </button>
+              {sellerBalance === null ? (
+                <p className="text-[10px] text-center text-rose-500 font-bold uppercase tracking-wider">
+                  * Buka toko (onboarding merchant) terlebih dahulu untuk membuka fitur transfer internal.
+                </p>
+              ) : (
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading || !internalTransfer.amount || Number(internalTransfer.amount) <= 0}
+                    className={`w-full py-6 rounded-none font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 border cursor-pointer ${
+                      isDark
+                        ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
+                        : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
+                    } disabled:opacity-20`}
+                  >
+                    {loading ? "Processing..." : "Execute Swap Transfer"}
+                  </button>
+                </div>
+              )}
             </form>
           ) : (
             <form onSubmit={activeTab === "send" ? handleTransfer : handleRequest} className="space-y-8">
