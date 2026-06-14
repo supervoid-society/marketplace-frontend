@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCart } from "../contexts/CartContext";
-import jsPDF from "jspdf";
+import { generateReceipt } from "../utils/receiptGenerator";
 import { CRUD_URL, AUTH_URL } from "../config";
 import Swal from "sweetalert2";
 
@@ -111,88 +111,16 @@ function Checkout() {
       return;
     }
 
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
+    // Generate professional receipt
+    generateReceipt({
+      items: cart.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      total,
+      buyerName: user.name || user.username || undefined,
     });
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-
-    const centerText = (text, y, fontSize = 10, fontStyle = "normal", font = "helvetica") => {
-      doc.setFont(font, fontStyle);
-      doc.setFontSize(fontSize);
-      const textWidth = doc.getTextWidth(text);
-      doc.text(text, (pageWidth - textWidth) / 2, y);
-    };
-
-    // Header
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.2);
-    doc.line(margin, 25, pageWidth - margin, 25);
-
-    centerText("MANIFEST / RECEIPT", 35, 7, "bold");
-    centerText("Ahmeng Marketplace", 50, 22, "normal", "times");
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    const dateStr = new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const refId = "AM-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-
-    doc.text(`DATE: ${dateStr}`, margin, 65);
-    doc.text(`REF: ${refId}`, pageWidth - margin - 45, 65);
-
-    doc.line(margin, 70, pageWidth - margin, 70);
-
-    // Table Header
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.text("DESCRIPTION", margin, 80);
-    doc.text("QTY", 140, 80);
-    doc.text("AMOUNT", pageWidth - margin - 20, 80);
-
-    doc.line(margin, 83, pageWidth - margin, 83);
-
-    // Items
-    let y = 93;
-    doc.setFont("helvetica", "normal");
-    cart.forEach((item) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 30;
-      }
-      doc.text(item.name.toUpperCase(), margin, y);
-      doc.text(item.quantity.toString(), 140, y);
-      doc.text(formatRupiah(item.price * item.quantity), pageWidth - margin - 20, y);
-      y += 8;
-    });
-
-    // Total section
-    y += 10;
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 10;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("TOTAL ACQUISITION", margin, y);
-    doc.setFontSize(14);
-    doc.text(formatRupiah(total), pageWidth - margin - 35, y);
-
-    // Footer
-    y = 275;
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
-    centerText("Thank you for your acquisition.", y);
-    centerText("This is an electronically generated manifest.", y + 4);
-
-    doc.save(`receipt-${refId}.pdf`);
 
     await clearCart();
     window.dispatchEvent(new CustomEvent("balanceChanged"));
