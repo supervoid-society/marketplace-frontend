@@ -77,7 +77,7 @@ function LoginPage() {
         <div className="mt-12 space-y-4">
           <p className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
             New here?{" "}
-            <Link to="/register-buyer" className={`underline underline-offset-4 ${isDark ? "text-zinc-100 hover:text-white" : "text-zinc-900 hover:text-black"}`}>
+            <Link to="/register" className={`underline underline-offset-4 ${isDark ? "text-zinc-100 hover:text-white" : "text-zinc-900 hover:text-black"}`}>
               Create an account
             </Link>
           </p>

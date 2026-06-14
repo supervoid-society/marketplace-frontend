@@ -261,7 +261,10 @@ function Settings() {
                           className="hidden"
                           id="profile-upload"
                         />
-                        <label htmlFor="profile-upload" className="cursor-pointer text-[10px] uppercase tracking-widest font-black underline underline-offset-8 hover:text-zinc-500 transition-colors">
+                        <label
+                          htmlFor="profile-upload"
+                          className="cursor-pointer text-[10px] uppercase tracking-widest font-black underline underline-offset-8 hover:text-zinc-500 transition-colors"
+                        >
                           Update Image
                         </label>
                         {(personalForm.imagePreview || (hasProfileImage && !deleteImage)) && (

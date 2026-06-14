@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useState, useEffect } from "react";
 import LandingPage from "./components/LandingPage";
 import LoginPage from "./components/LoginPage";
-import RegisterBuyer from "./components/RegisterBuyer";
-import RegisterSeller from "./components/RegisterSeller";
+import Register from "./components/Register";
+import SellerOnboarding from "./components/SellerOnboarding";
 import PublicCatalog from "./components/PublicCatalog";
 import CatalogDetail from "./components/CatalogDetail";
 import SellerPage from "./components/SellerPage";
@@ -143,8 +143,10 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/register-buyer" element={<RegisterBuyer />} />
-            <Route path="/register-seller" element={<RegisterSeller />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/register-buyer" element={<Navigate to="/register" />} />
+            <Route path="/register-seller" element={<Navigate to="/register" />} />
+            <Route path="/seller-onboarding" element={<SellerOnboarding />} />
             <Route path="/catalog" element={<PublicCatalog />} />
             <Route path="/catalog/:id" element={<CatalogDetail />} />
             <Route path="/seller/:userId" element={<SellerPage />} />

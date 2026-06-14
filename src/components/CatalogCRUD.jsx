@@ -101,11 +101,13 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
           <h2 className="text-2xl font-serif italic opacity-40">Your stock room is currently empty.</h2>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px bg-zinc-100 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-900">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 bg-transparent">
           {catalog.map((item) => (
             <div
               key={item.id}
-              className={`p-8 md:p-10 flex flex-col justify-between transition-opacity duration-500 ${isDark ? "bg-zinc-950" : "bg-white"} ${item.is_archived ? "opacity-50" : "opacity-100"}`}
+              className={`p-8 md:p-10 flex flex-col justify-between transition-all duration-300 border ${
+                isDark ? "bg-zinc-950 border-zinc-900 text-zinc-100 hover:border-zinc-800" : "bg-white border-zinc-200 text-zinc-900 hover:border-zinc-305"
+              } ${item.is_archived ? "opacity-50" : "opacity-100"}`}
             >
               <div className="mb-12">
                 <div className="flex justify-between items-start mb-8">
@@ -132,7 +134,7 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-px bg-zinc-100 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-900 -mx-8 -mb-8 md:-mx-10 md:-mb-10 mt-auto">
+              <div className={`grid grid-cols-2 gap-px border-t -mx-8 -mb-8 md:-mx-10 md:-mb-10 mt-auto ${isDark ? "bg-zinc-900 border-zinc-900" : "bg-zinc-200 border-zinc-200"}`}>
                 {userRole === "seller" && (
                   <button
                     onClick={() => !item.is_archived && navigate(`/manage-catalog/${item.id}`)}

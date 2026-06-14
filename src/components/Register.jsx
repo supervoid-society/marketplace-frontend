@@ -4,15 +4,15 @@ import { useTheme } from "../contexts/ThemeContext";
 import { AUTH_URL } from "../config";
 import Swal from "sweetalert2";
 
-function RegisterSeller() {
+function Register() {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [registerForm, setRegisterForm] = useState({
     username: "",
     password: "",
-    store_name: "",
-    description: "",
-    contact_phone: "",
+    full_name: "",
+    address: "",
+    phone: "",
   });
 
   const handleRegister = async (e) => {
@@ -24,39 +24,40 @@ function RegisterSeller() {
         body: JSON.stringify({
           username: registerForm.username,
           password: registerForm.password,
-          role: "seller",
+          role: "buyer",
         }),
       });
       const userData = await userRes.json();
       if (userData.id) {
-        const sellerRes = await fetch(`${AUTH_URL}/sellers`, {
+        const buyerRes = await fetch(`${AUTH_URL}/buyers`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             user_id: userData.id,
-            store_name: registerForm.store_name,
-            description: registerForm.description,
-            contact_phone: registerForm.contact_phone,
+            full_name: registerForm.full_name,
+            address: registerForm.address,
+            phone: registerForm.phone,
           }),
         });
-        const sellerData = await sellerRes.json();
-        if (sellerData.id) {
+        const buyerData = await buyerRes.json();
+        if (buyerData.id) {
           await fetch(`${AUTH_URL}/auth/balance/${userData.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ role: "seller", amount: 0 }),
+            body: JSON.stringify({ role: "buyer", amount: 100000 }),
           });
           Swal.fire({
             icon: "success",
             title: "Berhasil",
-            text: "Registrasi berhasil! Silakan login.",
+            text: "Registrasi berhasil! Saldo awal Rp 100.000 telah ditambahkan. Silakan login.",
+            confirmButtonColor: "#000",
           });
           navigate("/login");
         } else {
           Swal.fire({
             icon: "error",
             title: "Gagal",
-            text: "Gagal membuat profil penjual: " + (sellerData.error || "Unknown error"),
+            text: "Gagal membuat profil pembeli: " + (buyerData.error || "Unknown error"),
           });
         }
       } else {
@@ -76,9 +77,9 @@ function RegisterSeller() {
     <div className="min-h-[calc(100vh-4rem)] px-4 md:px-6 py-8 flex items-center justify-center">
       <div className="w-full flex justify-center">
         <div className={`p-8 md:p-12 rounded-none border transition-all duration-200 max-w-lg w-full ${isDark ? "bg-zinc-950 border-zinc-900" : "bg-white border-zinc-100"}`}>
-          <div className="mb-12 text-center">
-            <h2 className="text-4xl md:text-5xl font-serif italic mb-4">Merchant.</h2>
-            <p className={`text-[10px] uppercase tracking-[0.3em] font-black ${isDark ? "text-zinc-600" : "text-zinc-300"}`}>Seller Registration</p>
+          <div className="mb-12">
+            <h2 className="text-4xl md:text-5xl font-serif italic mb-4 text-center">Registration.</h2>
+            <p className={`text-center text-[10px] uppercase tracking-[0.3em] font-black ${isDark ? "text-zinc-600" : "text-zinc-300"}`}>Create Your Unified Account</p>
           </div>
           <form onSubmit={handleRegister} className="space-y-8 md:space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
@@ -112,12 +113,12 @@ function RegisterSeller() {
               </div>
               <div className="space-y-8">
                 <div>
-                  <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Store Name</label>
+                  <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Full Name</label>
                   <input
                     type="text"
-                    placeholder="Store Name"
-                    value={registerForm.store_name}
-                    onChange={(e) => setRegisterForm({ ...registerForm, store_name: e.target.value })}
+                    placeholder="Full Name"
+                    value={registerForm.full_name}
+                    onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })}
                     className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${
                       isDark ? "border-zinc-800 text-white placeholder-zinc-700 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-300 focus:border-black"
                     }`}
@@ -125,12 +126,12 @@ function RegisterSeller() {
                   />
                 </div>
                 <div>
-                  <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Contact Phone</label>
+                  <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Phone Number</label>
                   <input
                     type="tel"
                     placeholder="Phone"
-                    value={registerForm.contact_phone}
-                    onChange={(e) => setRegisterForm({ ...registerForm, contact_phone: e.target.value })}
+                    value={registerForm.phone}
+                    onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
                     className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 ${
                       isDark ? "border-zinc-800 text-white placeholder-zinc-700 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-300 focus:border-black"
                     }`}
@@ -139,11 +140,11 @@ function RegisterSeller() {
               </div>
             </div>
             <div>
-              <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Store Description</label>
+              <label className={`block text-[10px] uppercase tracking-[0.2em] font-black mb-3 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Delivery Address</label>
               <textarea
-                placeholder="Description"
-                value={registerForm.description}
-                onChange={(e) => setRegisterForm({ ...registerForm, description: e.target.value })}
+                placeholder="Address"
+                value={registerForm.address}
+                onChange={(e) => setRegisterForm({ ...registerForm, address: e.target.value })}
                 className={`w-full py-4 bg-transparent border-b focus:outline-none transition-all duration-200 min-h-[100px] ${
                   isDark ? "border-zinc-800 text-white placeholder-zinc-700 focus:border-white" : "border-zinc-100 text-black placeholder-zinc-300 focus:border-black"
                 }`}
@@ -153,21 +154,18 @@ function RegisterSeller() {
               type="submit"
               className={`w-full py-6 rounded-none transition-all duration-300 active:scale-95 font-bold text-[10px] uppercase tracking-[0.3em] border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
             >
-              Register Store
+              Create Account
             </button>
           </form>
-          <div className="mt-12 text-center space-y-4">
+          <div className="mt-12 text-center space-y-4 border-t border-dashed pt-6 border-zinc-800">
             <p className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-              Already have an account?{" "}
+              Already a member?{" "}
               <Link to="/login" className={`underline underline-offset-4 ${isDark ? "text-zinc-100 hover:text-white" : "text-zinc-900 hover:text-black"}`}>
                 Login
               </Link>
             </p>
-            <p className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-700" : "text-zinc-500"}`}>
-              Looking to buy?{" "}
-              <Link to="/register-buyer" className={`underline underline-offset-4 ${isDark ? "text-zinc-100 hover:text-white" : "text-zinc-900 hover:text-black"}`}>
-                Register as Buyer
-              </Link>
+            <p className={`text-[9px] uppercase tracking-widest leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+              Interested in selling? Register a standard account first. You can easily open a store and switch to Seller Mode anytime from your dashboard.
             </p>
           </div>
         </div>
@@ -176,4 +174,4 @@ function RegisterSeller() {
   );
 }
 
-export default RegisterSeller;
+export default Register;

@@ -176,11 +176,7 @@ function Review({ itemId }) {
 
     // Optimistic update
     const previousReviews = [...reviews];
-    setReviews(
-      reviews.map((r) =>
-        r.id === reviewId ? { ...r, rating: editReview.rating, comment: editReview.comment } : r
-      )
-    );
+    setReviews(reviews.map((r) => (r.id === reviewId ? { ...r, rating: editReview.rating, comment: editReview.comment } : r)));
 
     try {
       const res = await fetch(`${CRUD_URL}/reviews/${reviewId}`, {
