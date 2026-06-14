@@ -166,6 +166,19 @@ function WalletPage() {
     return "Rp " + angka.toLocaleString("id-ID");
   };
 
+  const formatRupiahCompact = (angka) => {
+    if (angka >= 1_000_000_000_000) {
+      return "Rp " + (angka / 1_000_000_000_000).toLocaleString("id-ID", { maximumFractionDigits: 2 }) + " T";
+    } else if (angka >= 1_000_000_000) {
+      return "Rp " + (angka / 1_000_000_000).toLocaleString("id-ID", { maximumFractionDigits: 2 }) + " M";
+    } else if (angka >= 1_000_000) {
+      return "Rp " + (angka / 1_000_000).toLocaleString("id-ID", { maximumFractionDigits: 2 }) + " jt";
+    }
+    return formatRupiah(angka);
+  };
+
+  const isLargeBalance = balance >= 1_000_000_000;
+
   if (!payload) return null;
 
   return (
@@ -175,9 +188,20 @@ function WalletPage() {
           <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">Wallet.</h1>
           <p className={`text-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Manage your capital and peer-to-peer transfers.</p>
         </div>
-        <div className={`p-8 border ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-100 bg-zinc-50/50"}`}>
+        <div className={`p-8 border ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-100 bg-zinc-50/50"} min-w-0 max-w-full`}>
           <span className="text-[10px] uppercase tracking-[0.3em] font-black opacity-40 block mb-2">Available Capital</span>
-          <span className="text-4xl font-black tracking-tighter">{formatRupiah(balance)}</span>
+          {isLargeBalance ? (
+            <div>
+              <span className="text-4xl font-black tracking-tighter block">
+                {formatRupiahCompact(balance)}
+              </span>
+              <span className={`text-xs mt-1 block opacity-40 break-all font-mono`}>
+                {formatRupiah(balance)}
+              </span>
+            </div>
+          ) : (
+            <span className="text-4xl font-black tracking-tighter break-all">{formatRupiah(balance)}</span>
+          )}
         </div>
       </div>
 
@@ -205,14 +229,14 @@ function WalletPage() {
                 <p className="italic opacity-40">No transaction history found.</p>
               ) : (
                 history.map((h) => (
-                  <div key={h.id} className={`p-6 border ${isDark ? "border-zinc-900 bg-zinc-950" : "border-zinc-100 bg-white"} flex justify-between items-center`}>
-                    <div>
-                      <p className="text-sm font-bold">{h.sender_id === payload.userId ? `To: ${h.receiver_name}` : `From: ${h.sender_name}`}</p>
+                  <div key={h.id} className={`p-6 border ${isDark ? "border-zinc-900 bg-zinc-950" : "border-zinc-100 bg-white"} flex justify-between items-center gap-4`}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate">{h.sender_id === payload.userId ? `To: ${h.receiver_name}` : `From: ${h.sender_name}`}</p>
                       <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">{new Date(h.created_at).toLocaleString()}</p>
                     </div>
-                    <span className={`text-xl font-black tracking-tighter ${h.sender_id === payload.userId ? "text-rose-500" : "text-emerald-500"}`}>
+                    <span className={`text-xl font-black tracking-tighter shrink-0 ${h.sender_id === payload.userId ? "text-rose-500" : "text-emerald-500"}`}>
                       {h.sender_id === payload.userId ? "-" : "+"}
-                      {formatRupiah(h.amount)}
+                      {formatRupiahCompact(h.amount)}
                     </span>
                   </div>
                 ))
@@ -309,7 +333,7 @@ function WalletPage() {
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <p className="text-sm font-bold">{req.requester_name} requests</p>
-                        <p className="text-2xl font-black tracking-tighter mt-1">{formatRupiah(req.amount)}</p>
+                        <p className="text-2xl font-black tracking-tighter mt-1 break-all">{formatRupiahCompact(req.amount)}</p>
                       </div>
                       <span className="text-[10px] uppercase font-black px-2 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20">Pending</span>
                     </div>
@@ -342,7 +366,7 @@ function WalletPage() {
                 pendingRequests.outgoing.map((req) => (
                   <div key={req.id} className={`p-6 border ${isDark ? "border-zinc-900 bg-zinc-950/50" : "border-zinc-100 bg-white/50"}`}>
                     <p className="text-sm font-bold opacity-60">Sent to {req.target_name}</p>
-                    <p className="text-2xl font-black tracking-tighter mt-1 opacity-60">{formatRupiah(req.amount)}</p>
+                    <p className="text-2xl font-black tracking-tighter mt-1 opacity-60 break-all">{formatRupiahCompact(req.amount)}</p>
                   </div>
                 ))
               )}
