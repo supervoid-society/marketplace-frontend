@@ -17,6 +17,7 @@ function Review({ itemId }) {
   const [editingReview, setEditingReview] = useState(null);
   const [editReview, setEditReview] = useState({ rating: 5, comment: "" });
   const [item, setItem] = useState(null);
+  const [seller, setSeller] = useState(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [submittingReply, setSubmittingReply] = useState(false);
   const [submittingEdit, setSubmittingEdit] = useState(false);
@@ -74,7 +75,18 @@ function Review({ itemId }) {
   const fetchItem = async () => {
     try {
       const res = await fetch(`${CRUD_URL}/catalog-items/${itemId}`);
-      if (res.ok) setItem(await res.json());
+      if (res.ok) {
+        const itemData = await res.json();
+        setItem(itemData);
+        try {
+          const sellerRes = await fetch(`${AUTH_URL}/sellers/public/${itemData.user_id}`);
+          if (sellerRes.ok) {
+            setSeller(await sellerRes.json());
+          }
+        } catch (err) {
+          console.error("Error fetching seller in Review:", err);
+        }
+      }
     } catch (error) {
       console.error(error);
     }
@@ -153,6 +165,42 @@ function Review({ itemId }) {
       alert("Failed to save reply. Please try again.");
     } finally {
       setSubmittingReply(false);
+    }
+  };
+
+  const handleEditSubmit = async (e, reviewId) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setSubmittingEdit(true);
+
+    // Optimistic update
+    const previousReviews = [...reviews];
+    setReviews(
+      reviews.map((r) =>
+        r.id === reviewId ? { ...r, rating: editReview.rating, comment: editReview.comment } : r
+      )
+    );
+
+    try {
+      const res = await fetch(`${CRUD_URL}/reviews/${reviewId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ rating: editReview.rating, comment: editReview.comment }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update review");
+      }
+
+      setEditingReview(null);
+    } catch (error) {
+      console.error(error);
+      // Rollback on error
+      setReviews(previousReviews);
+      alert("Failed to update review. Please try again.");
+    } finally {
+      setSubmittingEdit(false);
     }
   };
 
@@ -250,16 +298,92 @@ function Review({ itemId }) {
                       e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(buyerInfos[review.buyer_id] || "Client")}&background=random`;
                     }}
                   />
-                  <span className="text-xs uppercase tracking-widest font-black">{buyerInfos[review.buyer_id] || `Client ${review.buyer_id}`}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase tracking-widest font-black">{buyerInfos[review.buyer_id] || `Client ${review.buyer_id}`}</span>
+                    {user && user.role === "buyer" && user.id === review.buyer_id && editingReview !== review.id && (
+                      <button
+                        onClick={() => {
+                          setEditingReview(review.id);
+                          setEditReview({ rating: review.rating, comment: review.comment || "" });
+                        }}
+                        className="text-[10px] uppercase font-black opacity-40 hover:opacity-100 transition-opacity ml-2 border border-zinc-200 dark:border-zinc-800 px-2 py-0.5"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {renderStars(review.rating)}
+                {editingReview !== review.id && renderStars(review.rating)}
               </div>
-              <p className={`text-lg leading-relaxed font-serif ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{review.comment}</p>
+
+              {editingReview === review.id ? (
+                <form onSubmit={(e) => handleEditSubmit(e, review.id)} className={`mb-8 p-6 border ${isDark ? "border-zinc-900 bg-zinc-950/30" : "border-zinc-100 bg-zinc-50/30"}`}>
+                  <span className={`block text-[10px] uppercase tracking-widest font-black mb-4 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Edit Testimonial</span>
+                  <div className="mb-4">
+                    <label className="block text-[10px] uppercase tracking-widest font-bold mb-2">Rating</label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setEditReview({ ...editReview, rating: num })}
+                          className={`transition-all duration-300 ${num <= editReview.rating ? "opacity-100 scale-110" : "opacity-20 hover:opacity-50"}`}
+                        >
+                          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-[10px] uppercase tracking-widest font-bold mb-2">Commentary</label>
+                    <textarea
+                      value={editReview.comment}
+                      onChange={(e) => setEditReview({ ...editReview, comment: e.target.value })}
+                      className="w-full py-2 bg-transparent border-b border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors text-sm"
+                      rows="2"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={submittingEdit}
+                      className={`px-4 py-2 rounded-none font-bold text-[9px] uppercase tracking-[0.2em] transition-all duration-300 ${isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-white"}`}
+                    >
+                      {submittingEdit ? "Updating..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingReview(null)}
+                      className="px-4 py-2 rounded-none font-bold text-[9px] uppercase tracking-[0.2em] transition-all duration-300 border border-zinc-200 dark:border-zinc-800"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <p className={`text-lg leading-relaxed font-serif ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{review.comment}</p>
+              )}
 
               {review.reply && replyingTo !== review.id && (
                 <div className={`mt-8 ml-8 p-8 border-l-2 ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
                   <div className="flex justify-between items-start mb-4">
-                    <span className={`block text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Seller Correspondence</span>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={`${AUTH_URL}/users/profile-image/${item?.user_id}`}
+                        alt="Seller"
+                        className="w-8 h-8 rounded-full object-cover bg-zinc-200 dark:bg-zinc-800"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(seller?.store_name || "Seller")}&background=random`;
+                        }}
+                      />
+                      <div>
+                        <span className="text-xs uppercase tracking-widest font-black block">{seller?.store_name || "Seller"}</span>
+                        <span className={`text-[9px] uppercase tracking-widest block ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Seller Correspondence</span>
+                      </div>
+                    </div>
                     {user && user.role === "seller" && item && user.id === item.user_id && (
                       <button
                         onClick={() => {

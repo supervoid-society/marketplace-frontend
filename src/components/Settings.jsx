@@ -8,6 +8,7 @@ function Settings() {
   const [activeTab, setActiveTab] = useState("security");
   const [userRole, setUserRole] = useState("");
   const [hasProfileImage, setHasProfileImage] = useState(false);
+  const [deleteImage, setDeleteImage] = useState(false);
   const [personalForm, setPersonalForm] = useState({
     full_name: "",
     address: "",
@@ -52,9 +53,12 @@ function Settings() {
           description: data.description || "",
           contact_phone: data.contact_phone || "",
         });
+        setDeleteImage(false);
         if (data.image_id) {
           const imgRes = await fetch(`${AUTH_URL}/users/profile-image/${payload.userId}`);
           setHasProfileImage(imgRes.ok);
+        } else {
+          setHasProfileImage(false);
         }
       }
     } catch (error) {
@@ -79,6 +83,10 @@ function Settings() {
               description: personalForm.description,
               contact_phone: personalForm.contact_phone,
             };
+
+      if (deleteImage) {
+        body.delete_image = true;
+      }
 
       const performUpdate = async (finalBody) => {
         const res = await fetch(endpoint, {
@@ -233,26 +241,41 @@ function Settings() {
                     <label className={`block text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Portrait</label>
                     <div className="flex items-center gap-10">
                       <div className={`w-24 h-32 border grayscale ${isDark ? "border-zinc-800 bg-zinc-950" : "border-zinc-100 bg-zinc-50"}`}>
-                        {personalForm.imagePreview || hasProfileImage ? (
+                        {personalForm.imagePreview || (hasProfileImage && !deleteImage) ? (
                           <img src={personalForm.imagePreview || `${AUTH_URL}/users/profile-image/${payload.userId}`} className="w-full h-full object-cover" alt="Profile" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[8px] uppercase tracking-widest opacity-20">None</div>
                         )}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 flex flex-col gap-4 items-start">
                         <input
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
                             const file = e.target.files[0];
-                            if (file) setPersonalForm({ ...personalForm, image: file, imagePreview: URL.createObjectURL(file) });
+                            if (file) {
+                              setPersonalForm({ ...personalForm, image: file, imagePreview: URL.createObjectURL(file) });
+                              setDeleteImage(false);
+                            }
                           }}
                           className="hidden"
                           id="profile-upload"
                         />
-                        <label htmlFor="profile-upload" className="cursor-pointer text-[10px] uppercase tracking-widest font-black underline underline-offset-8">
+                        <label htmlFor="profile-upload" className="cursor-pointer text-[10px] uppercase tracking-widest font-black underline underline-offset-8 hover:text-zinc-500 transition-colors">
                           Update Image
                         </label>
+                        {(personalForm.imagePreview || (hasProfileImage && !deleteImage)) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteImage(true);
+                              setPersonalForm((prev) => ({ ...prev, image: null, imagePreview: null }));
+                            }}
+                            className="text-[10px] uppercase tracking-widest font-black text-rose-500 hover:text-rose-400 transition-colors cursor-pointer border border-rose-500/20 px-3 py-1 bg-rose-500/5"
+                          >
+                            Delete Image
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

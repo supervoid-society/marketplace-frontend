@@ -116,11 +116,22 @@ function CatalogDetail() {
           <p className={`text-xl md:text-2xl leading-relaxed mb-16 font-medium tracking-tight ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{item.description}</p>
 
           {seller && (
-            <div className="mb-12">
-              <span className={`block text-[10px] uppercase tracking-widest font-bold mb-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Sourced From</span>
-              <Link to={`/seller/${item.user_id}`} className="text-2xl font-serif italic hover:underline">
-                {seller.store_name}
-              </Link>
+            <div className="mb-12 flex items-center gap-4">
+              <img
+                src={`${AUTH_URL}/users/profile-image/${item.user_id}`}
+                alt={seller.store_name}
+                className="w-12 h-12 rounded-full object-cover border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(seller.store_name)}&background=random`;
+                }}
+              />
+              <div>
+                <span className={`block text-[10px] uppercase tracking-widest font-bold mb-1 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Sourced From</span>
+                <Link to={`/seller/${item.user_id}`} className="text-2xl font-serif italic hover:underline">
+                  {seller.store_name}
+                </Link>
+              </div>
             </div>
           )}
 
