@@ -32,21 +32,23 @@ export default {
         VITE_CRUD_SERVICE_URL: env.VITE_CRUD_SERVICE_URL || "URL_NOT_SET",
       };
 
-      return new HTMLRewriter()
-        .on("head", {
-          element(element) {
-            element.prepend(`<script>window.ENV = ${JSON.stringify(vars)};</script>`, { html: true });
-          },
-        })
-        // Fallback: if no head, try to prepend to body
-        .on("body", {
-          element(element) {
-            // We only need to inject once, but HTMLRewriter handles multiple matches fine.
-            // Prepending to body as a safety measure.
-            element.prepend(`<script>if(!window.ENV) window.ENV = ${JSON.stringify(vars)};</script>`, { html: true });
-          },
-        })
-        .transform(response);
+      return (
+        new HTMLRewriter()
+          .on("head", {
+            element(element) {
+              element.prepend(`<script>window.ENV = ${JSON.stringify(vars)};</script>`, { html: true });
+            },
+          })
+          // Fallback: if no head, try to prepend to body
+          .on("body", {
+            element(element) {
+              // We only need to inject once, but HTMLRewriter handles multiple matches fine.
+              // Prepending to body as a safety measure.
+              element.prepend(`<script>if(!window.ENV) window.ENV = ${JSON.stringify(vars)};</script>`, { html: true });
+            },
+          })
+          .transform(response)
+      );
     }
 
     return response;

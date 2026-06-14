@@ -111,21 +111,88 @@ function Checkout() {
       return;
     }
 
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text("RECEIPT", 105, 20, { align: "center" });
-    doc.setFontSize(10);
-    doc.text("Ahmeng Marketplace", 105, 30, { align: "center" });
-    let y = 60;
-    cart.forEach((item, index) => {
-      doc.text(`${index + 1}. ${item.name} (x${item.quantity})`, 20, y);
-      doc.text(formatRupiah(item.price * item.quantity), 160, y);
-      y += 10;
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
     });
-    doc.line(20, y, 190, y);
-    doc.text("TOTAL", 130, y + 10);
-    doc.text(formatRupiah(total), 160, y + 10);
-    doc.save("receipt.pdf");
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+
+    const centerText = (text, y, fontSize = 10, fontStyle = "normal", font = "helvetica") => {
+      doc.setFont(font, fontStyle);
+      doc.setFontSize(fontSize);
+      const textWidth = doc.getTextWidth(text);
+      doc.text(text, (pageWidth - textWidth) / 2, y);
+    };
+
+    // Header
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.2);
+    doc.line(margin, 25, pageWidth - margin, 25);
+
+    centerText("MANIFEST / RECEIPT", 35, 7, "bold");
+    centerText("Ahmeng Marketplace", 50, 22, "normal", "times");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    const dateStr = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const refId = "AM-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+    doc.text(`DATE: ${dateStr}`, margin, 65);
+    doc.text(`REF: ${refId}`, pageWidth - margin - 45, 65);
+
+    doc.line(margin, 70, pageWidth - margin, 70);
+
+    // Table Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("DESCRIPTION", margin, 80);
+    doc.text("QTY", 140, 80);
+    doc.text("AMOUNT", pageWidth - margin - 20, 80);
+
+    doc.line(margin, 83, pageWidth - margin, 83);
+
+    // Items
+    let y = 93;
+    doc.setFont("helvetica", "normal");
+    cart.forEach((item) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 30;
+      }
+      doc.text(item.name.toUpperCase(), margin, y);
+      doc.text(item.quantity.toString(), 140, y);
+      doc.text(formatRupiah(item.price * item.quantity), pageWidth - margin - 20, y);
+      y += 8;
+    });
+
+    // Total section
+    y += 10;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("TOTAL ACQUISITION", margin, y);
+    doc.setFontSize(14);
+    doc.text(formatRupiah(total), pageWidth - margin - 35, y);
+
+    // Footer
+    y = 275;
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7);
+    centerText("Thank you for your acquisition.", y);
+    centerText("This is an electronically generated manifest.", y + 4);
+
+    doc.save(`receipt-${refId}.pdf`);
 
     await clearCart();
     window.dispatchEvent(new CustomEvent("balanceChanged"));
@@ -155,7 +222,11 @@ function Checkout() {
             <div className={`p-6 md:p-10 border ${isDark ? "bg-zinc-950 border-zinc-800" : "bg-zinc-50 border-zinc-100"}`}>
               <div className="text-center mb-12 border-b border-zinc-200 dark:border-zinc-800 pb-8">
                 <h2 className="text-xs uppercase tracking-[0.4em] font-black mb-2">Manifest / Receipt</h2>
-                <p className="text-[10px] uppercase tracking-widest opacity-40">{new Date().toLocaleDateString("en-GB")}</p>
+                <h3 className="text-2xl font-serif italic mb-4">Ahmeng Marketplace</h3>
+                <div className="flex justify-between items-center text-[8px] uppercase tracking-[0.2em] opacity-40 font-bold px-4">
+                  <span>REF: AM-{Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+                  <span>{new Date().toLocaleDateString("en-GB")}</span>
+                </div>
               </div>
 
               <div className="space-y-6 mb-12">
