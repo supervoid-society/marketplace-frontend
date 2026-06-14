@@ -130,9 +130,9 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
                 <h3 className="text-2xl font-serif tracking-tight mb-4 leading-tight">{item.name}</h3>
                 <p className={`text-sm mb-8 line-clamp-3 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{item.description}</p>
 
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black tracking-tighter">{formatRupiah(item.price)}</span>
-                  <span className={`text-[10px] uppercase font-bold opacity-30 tracking-widest`}>Qty: {item.qty}</span>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-2xl md:text-3xl font-black tracking-tighter break-all">{formatRupiah(item.price)}</span>
+                  <span className="text-[10px] uppercase font-bold opacity-30 tracking-widest">Qty: {item.qty}</span>
                 </div>
               </div>
 

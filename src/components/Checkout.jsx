@@ -323,17 +323,17 @@ function Checkout() {
 
               <div className="space-y-6 mb-12">
                 {cart.map((item, index) => (
-                  <div key={item.id} className="flex justify-between items-start gap-8">
-                    <div className="flex gap-4">
+                  <div key={item.id} className="flex flex-wrap sm:flex-nowrap justify-between items-start gap-4 sm:gap-8">
+                    <div className="flex gap-4 min-w-0">
                       <span className="text-[10px] font-black opacity-20">{String(index + 1).padStart(2, "0")}</span>
-                      <div>
-                        <p className="text-sm font-serif">{item.name}</p>
-                        <p className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+                      <div className="min-w-0">
+                        <p className="text-sm font-serif break-words">{item.name}</p>
+                        <p className={`text-[10px] uppercase tracking-widest font-bold break-all ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
                           QTY: {item.quantity} &times; {formatRupiah(item.price)}
                         </p>
                       </div>
                     </div>
-                    <span className="text-sm font-medium tracking-tighter">{formatRupiah(item.price * item.quantity)}</span>
+                    <span className="text-sm font-medium tracking-tighter break-all shrink-0">{formatRupiah(item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>
@@ -387,29 +387,29 @@ function Checkout() {
               </div>
 
               <div className="border-t border-zinc-200 dark:border-zinc-800 pt-8 space-y-4">
-                <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
+                <div className="flex flex-wrap justify-between items-center text-[10px] uppercase tracking-widest font-bold gap-2">
                   <span className={isDark ? "text-zinc-650" : "text-zinc-400"}>Subtotal</span>
-                  <span>{formatRupiah(total)}</span>
+                  <span className="break-all">{formatRupiah(total)}</span>
                 </div>
                 {platformFee > 0 && (
-                  <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
+                  <div className="flex flex-wrap justify-between items-center text-[10px] uppercase tracking-widest font-bold gap-2">
                     <span className={isDark ? "text-zinc-600" : "text-zinc-400"}>Platform Fee</span>
-                    <span>+ {formatRupiah(platformFee)}</span>
+                    <span className="break-all">+ {formatRupiah(platformFee)}</span>
                   </div>
                 )}
                 {discountAmount > 0 && (
-                  <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold text-emerald-500">
+                  <div className="flex flex-wrap justify-between items-center text-[10px] uppercase tracking-widest font-bold text-emerald-500 gap-2">
                     <span>Discount Promo ({appliedPromo?.code})</span>
-                    <span>- {formatRupiah(discountAmount)}</span>
+                    <span className="break-all">- {formatRupiah(discountAmount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-end border-t border-zinc-100 dark:border-zinc-900 pt-4">
+                <div className="flex flex-wrap justify-between items-end border-t border-zinc-100 dark:border-zinc-900 pt-4 gap-2">
                   <span className="text-[10px] uppercase tracking-[0.2em] font-black">Total Amount</span>
-                  <span className="text-3xl font-black tracking-tighter">{formatRupiah(finalTotal)}</span>
+                  <span className="text-2xl sm:text-3xl font-black tracking-tighter break-all">{formatRupiah(finalTotal)}</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold pt-2">
+                <div className="flex flex-wrap justify-between items-center text-[10px] uppercase tracking-widest font-bold pt-2 gap-2">
                   <span className={isDark ? "text-zinc-600" : "text-zinc-400"}>Current Balance</span>
-                  <span className={finalTotal > balance ? "text-rose-500" : ""}>{formatRupiah(balance)}</span>
+                  <span className={`break-all ${finalTotal > balance ? "text-rose-500" : ""}`}>{formatRupiah(balance)}</span>
                 </div>
                 {finalTotal > balance && (
                   <p className="text-center text-[10px] uppercase tracking-widest font-black text-rose-500 mt-4">Insufficient funds for this transaction.</p>

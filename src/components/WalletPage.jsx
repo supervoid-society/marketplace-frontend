@@ -289,15 +289,11 @@ function WalletPage() {
           }`}
         >
           <div className="flex justify-between items-center mb-4 gap-4">
-            <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">
-              {payload.role === "admin" ? "Platform Admin Wallet" : "Member Wallet (Buyer)"}
-            </span>
+            <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-60">{payload.role === "admin" ? "Platform Admin Wallet" : "Member Wallet (Buyer)"}</span>
             {(payload.role === "buyer" || payload.role === "admin") && (
               <span
                 className={`text-[8px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-sm border ${
-                  payload.role === "admin"
-                    ? "bg-red-500/10 text-red-500 border-red-500/20"
-                    : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                  payload.role === "admin" ? "bg-red-500/10 text-red-500 border-red-500/20" : "bg-blue-500/10 text-blue-500 border-blue-500/20"
                 }`}
               >
                 Active

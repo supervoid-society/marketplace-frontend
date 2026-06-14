@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 
 function Settings() {
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState("security");
+  const [activeTab, setActiveTab] = useState("personal");
   const [userRole, setUserRole] = useState("");
   const [hasProfileImage, setHasProfileImage] = useState(false);
   const [deleteImage, setDeleteImage] = useState(false);
@@ -34,14 +34,13 @@ function Settings() {
     if (token) {
       setUserRole(payload.role);
       setSecurityForm((prev) => ({ ...prev, newUsername: payload.username }));
-      if (payload.role === "admin") setActiveTab("security");
       loadPersonalInfo(payload.role);
     }
   }, [token]);
 
   const loadPersonalInfo = async (role) => {
     try {
-      const endpoint = role === "buyer" ? `${AUTH_URL}/buyers/me` : `${AUTH_URL}/sellers/me`;
+      const endpoint = role === "buyer" || role === "admin" ? `${AUTH_URL}/buyers/me` : `${AUTH_URL}/sellers/me`;
       const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
@@ -70,9 +69,9 @@ function Settings() {
     e.preventDefault();
     setLoading(true);
     try {
-      const endpoint = userRole === "buyer" ? `${AUTH_URL}/buyers/me` : `${AUTH_URL}/sellers/me`;
+      const endpoint = userRole === "buyer" || userRole === "admin" ? `${AUTH_URL}/buyers/me` : `${AUTH_URL}/sellers/me`;
       let body =
-        userRole === "buyer"
+        userRole === "buyer" || userRole === "admin"
           ? {
               full_name: personalForm.full_name,
               address: personalForm.address,
@@ -162,14 +161,12 @@ function Settings() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
         <div className="lg:col-span-4 lg:sticky lg:top-32">
           <nav className="flex flex-col gap-px bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
-            {userRole !== "admin" && (
-              <button
-                onClick={() => setActiveTab("personal")}
-                className={`px-8 py-6 text-left font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === "personal" ? (isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-white") : isDark ? "bg-zinc-950 text-zinc-600 hover:text-zinc-300" : "bg-white text-zinc-400 hover:text-zinc-900"}`}
-              >
-                Personal Information
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab("personal")}
+              className={`px-8 py-6 text-left font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === "personal" ? (isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-white") : isDark ? "bg-zinc-950 text-zinc-600 hover:text-zinc-300" : "bg-white text-zinc-400 hover:text-zinc-900"}`}
+            >
+              Personal Information
+            </button>
             <button
               onClick={() => setActiveTab("security")}
               className={`px-8 py-6 text-left font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === "security" ? (isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-900 text-white") : isDark ? "bg-zinc-950 text-zinc-600 hover:text-zinc-300" : "bg-white text-zinc-400 hover:text-zinc-900"}`}
@@ -186,7 +183,7 @@ function Settings() {
                 <h2 className="text-3xl font-serif italic mb-12">Profile Details</h2>
 
                 <div className="space-y-8">
-                  {userRole === "buyer" ? (
+                  {userRole === "buyer" || userRole === "admin" ? (
                     <>
                       <div className="space-y-3">
                         <label className={`text-[10px] uppercase tracking-widest font-black ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Full Name</label>
