@@ -11,8 +11,6 @@ import CatalogCRUD from "./components/CatalogCRUD";
 import AddCatalogItem from "./components/AddCatalogItem";
 import EditCatalogItem from "./components/EditCatalogItem";
 import UserCRUD from "./components/UserCRUD";
-import AddUser from "./components/AddUser";
-import EditUser from "./components/EditUser";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import Settings from "./components/Settings";
@@ -160,8 +158,6 @@ function App() {
             <Route path="/manage-catalog/add" element={token && (userRole === "admin" || userRole === "seller") ? <AddCatalogItem token={token} /> : <Navigate to="/" />} />
             <Route path="/manage-catalog/:id" element={token && (userRole === "admin" || userRole === "seller") ? <EditCatalogItem token={token} /> : <Navigate to="/" />} />
             <Route path="/manage-users" element={token && userRole === "admin" ? <UserCRUD token={token} /> : <Navigate to="/" />} />
-            <Route path="/manage-users/add" element={token && userRole === "admin" ? <AddUser token={token} /> : <Navigate to="/" />} />
-            <Route path="/manage-users/:id" element={token && userRole === "admin" ? <EditUser token={token} /> : <Navigate to="/" />} />
             <Route path="/settings" element={token ? <Settings token={token} userRole={userRole} /> : <Navigate to="/" />} />
             <Route path="/transaction-history" element={token && (userRole === "buyer" || userRole === "seller") ? <TransactionHistory /> : <Navigate to="/" />} />
             <Route path="/wallet" element={token && (userRole === "buyer" || userRole === "seller") ? <WalletPage /> : <Navigate to="/" />} />

@@ -30,11 +30,11 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
 
   const handleDeleteItem = async (id) => {
     const result = await Swal.fire({
-      title: "Archive Item?",
-      text: "This item will be hidden from the public catalog.",
+      title: "Hapus Item?",
+      text: "Barang ini akan disembunyikan dari katalog publik.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Archive",
+      confirmButtonText: "Hapus",
       confirmButtonColor: "#000",
       background: isDark ? "#09090b" : "#fff",
       color: isDark ? "#fff" : "#000",
@@ -107,13 +107,15 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
               key={item.id}
               className={`p-8 md:p-10 flex flex-col justify-between transition-all duration-300 border ${
                 isDark ? "bg-zinc-950 border-zinc-900 text-zinc-100 hover:border-zinc-800" : "bg-white border-zinc-200 text-zinc-900 hover:border-zinc-305"
-              } ${item.is_archived ? "opacity-50" : "opacity-100"}`}
+              } ${item.is_archived || item.is_banned === 1 ? "opacity-50" : "opacity-100"}`}
             >
               <div className="mb-12">
                 <div className="flex justify-between items-start mb-8">
                   <span className="text-[10px] font-black opacity-20 uppercase tracking-[0.3em]">REF / {item.id.slice(-6)}</span>
                   <div className="flex flex-col items-end gap-2">
-                    {item.is_archived ? (
+                    {item.is_banned === 1 ? (
+                      <div className="px-3 py-1 text-[8px] uppercase tracking-widest font-black border border-rose-500 text-rose-500 bg-rose-500/5">Banned</div>
+                    ) : item.is_archived ? (
                       <div className="px-3 py-1 text-[8px] uppercase tracking-widest font-black border border-zinc-500 text-zinc-500 bg-zinc-500/5">Archived</div>
                     ) : (
                       <div
@@ -134,21 +136,24 @@ function CatalogCRUD({ token, syncCartWithCatalog, userRole }) {
                 </div>
               </div>
 
-              <div className={`grid grid-cols-2 gap-px border-t -mx-8 -mb-8 md:-mx-10 md:-mb-10 mt-auto ${isDark ? "bg-zinc-900 border-zinc-900" : "bg-zinc-200 border-zinc-200"}`}>
+              <div
+                className={`grid ${userRole === "seller" ? "grid-cols-2" : "grid-cols-1"} gap-px border-t -mx-8 -mb-8 md:-mx-10 md:-mb-10 mt-auto ${isDark ? "bg-zinc-900 border-zinc-900" : "bg-zinc-200 border-zinc-200"}`}
+              >
                 {userRole === "seller" && (
                   <button
                     onClick={() => !item.is_archived && navigate(`/manage-catalog/${item.id}`)}
-                    disabled={item.is_archived}
-                    className={`py-6 font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 ${item.is_archived ? "opacity-20 cursor-not-allowed" : ""} ${isDark ? "bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100" : "bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-900"}`}
+                    disabled={item.is_archived || item.is_banned === 1}
+                    className={`py-6 font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 ${item.is_archived || item.is_banned === 1 ? "opacity-20 cursor-not-allowed" : ""} ${isDark ? "bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100" : "bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-900"}`}
                   >
                     Edit
                   </button>
                 )}
                 <button
                   onClick={() => (item.is_archived ? handleRestoreItem(item.id) : handleDeleteItem(item.id))}
-                  className={`py-6 font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 ${item.is_archived ? "text-emerald-500/60 hover:text-emerald-500" : "text-rose-500/60 hover:text-rose-500"} ${isDark ? "bg-zinc-950 hover:bg-zinc-900" : "bg-white hover:bg-zinc-50"}`}
+                  disabled={userRole === "seller" && item.is_banned === 1}
+                  className={`py-6 font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-300 ${userRole === "seller" && item.is_banned === 1 ? "opacity-20 cursor-not-allowed" : ""} ${item.is_archived ? "text-emerald-500/60 hover:text-emerald-500" : "text-rose-500/60 hover:text-rose-500"} ${isDark ? "bg-zinc-950 hover:bg-zinc-900" : "bg-white hover:bg-zinc-50"}`}
                 >
-                  {item.is_archived ? "Restore" : "Archive"}
+                  {item.is_banned === 1 ? (userRole === "admin" ? "Restore (Unban)" : "Banned") : item.is_archived ? "Restore" : "Hapus"}
                 </button>
               </div>
             </div>
