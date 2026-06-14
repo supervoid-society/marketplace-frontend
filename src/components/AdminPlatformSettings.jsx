@@ -7,8 +7,8 @@ function AdminPlatformSettings() {
   const { isDark } = useTheme();
   const [settings, setSettings] = useState({
     fee_type: "percentage",
-    fee_percentage: 0,
-    fee_fixed: 0,
+    fee_percentage: "0",
+    fee_fixed: "0",
   });
 
   const [promoForm, setPromoForm] = useState({
@@ -39,7 +39,11 @@ function AdminPlatformSettings() {
       });
       if (res.ok) {
         const data = await res.json();
-        setSettings(data);
+        setSettings({
+          fee_type: data.fee_type || "percentage",
+          fee_percentage: data.fee_percentage !== undefined ? String(data.fee_percentage) : "0",
+          fee_fixed: data.fee_fixed !== undefined ? String(data.fee_fixed) : "0",
+        });
       }
     } catch (error) {
       console.error("Failed to fetch settings:", error);
@@ -64,13 +68,19 @@ function AdminPlatformSettings() {
     e.preventDefault();
     setLoadingSettings(true);
     try {
+      const payload = {
+        fee_type: settings.fee_type,
+        fee_percentage: parseFloat(settings.fee_percentage) || 0,
+        fee_fixed: parseFloat(settings.fee_fixed) || 0,
+      };
+
       const res = await fetch(`${CRUD_URL}/admin-features/platform-settings`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -233,24 +243,14 @@ function AdminPlatformSettings() {
         <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter leading-none mb-4">
           Platform <span className="italic">Control.</span>
         </h1>
-        <p className={`text-xl max-w-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-          Adjust platform acquisition fees and manage subsidized promo codes for the marketplace.
-        </p>
+        <p className={`text-xl max-w-xl ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Adjust platform acquisition fees and manage subsidized promo codes for the marketplace.</p>
       </div>
 
       {/* Top Section: Setting Cards side-by-side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-start">
-        
         {/* Card 1: Platform settings */}
-        <div className={`p-6 sm:p-8 border rounded-lg transition-all duration-300 h-full ${
-          isDark ? "border-zinc-900 bg-zinc-950/20" : "border-zinc-200/60 bg-zinc-50/20"
-        }`}>
+        <div className={`p-6 sm:p-8 border rounded-lg transition-all duration-300 h-full ${isDark ? "border-zinc-900 bg-zinc-950/20" : "border-zinc-200/60 bg-zinc-50/20"}`}>
           <div className="flex items-center space-x-2 mb-8">
-            <div className={`w-8 h-8 flex items-center justify-center rounded border ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white"}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
             <h2 className="text-xs uppercase tracking-[0.3em] font-black">Fee Configurations</h2>
           </div>
 
@@ -277,9 +277,7 @@ function AdminPlatformSettings() {
                   </button>
                 ))}
               </div>
-              <p className={`text-[9px] italic mt-2 opacity-50 ${isDark ? "text-zinc-400" : "text-zinc-550"}`}>
-                {feeTypes.find((t) => t.value === settings.fee_type)?.desc}
-              </p>
+              <p className={`text-[9px] italic mt-2 opacity-50 ${isDark ? "text-zinc-400" : "text-zinc-550"}`}>{feeTypes.find((t) => t.value === settings.fee_type)?.desc}</p>
             </div>
 
             {(settings.fee_type === "percentage" || settings.fee_type === "both") && (
@@ -287,12 +285,16 @@ function AdminPlatformSettings() {
                 <label className="block text-[8px] uppercase tracking-widest font-black opacity-60">Fee Percentage</label>
                 <div className="relative flex items-center">
                   <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*\.?[0-9]*"
                     value={settings.fee_percentage}
-                    onChange={(e) => setSettings({ ...settings, fee_percentage: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                        setSettings({ ...settings, fee_percentage: val });
+                      }
+                    }}
                     className="w-full py-3 pr-8 bg-transparent border-b focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors text-3xl font-black font-mono tracking-tight"
                     required
                   />
@@ -307,10 +309,16 @@ function AdminPlatformSettings() {
                 <div className="relative flex items-center">
                   <span className="absolute left-0 text-xs font-bold opacity-45">Rp</span>
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={settings.fee_fixed}
-                    onChange={(e) => setSettings({ ...settings, fee_fixed: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || /^[0-9]*$/.test(val)) {
+                        setSettings({ ...settings, fee_fixed: val });
+                      }
+                    }}
                     className="w-full py-3 pl-8 bg-transparent border-b focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors text-3xl font-black font-mono tracking-tight"
                     required
                   />
@@ -333,15 +341,8 @@ function AdminPlatformSettings() {
         </div>
 
         {/* Card 2: Promo generator */}
-        <div className={`p-6 sm:p-8 border rounded-lg transition-all duration-300 h-full ${
-          isDark ? "border-zinc-900 bg-zinc-950/20" : "border-zinc-200/60 bg-zinc-50/20"
-        }`}>
+        <div className={`p-6 sm:p-8 border rounded-lg transition-all duration-300 h-full ${isDark ? "border-zinc-900 bg-zinc-950/20" : "border-zinc-200/60 bg-zinc-50/20"}`}>
           <div className="flex items-center space-x-2 mb-8">
-            <div className={`w-8 h-8 flex items-center justify-center rounded border ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white"}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-              </svg>
-            </div>
             <h2 className="text-xs uppercase tracking-[0.3em] font-black">Generate Voucher</h2>
           </div>
 
@@ -450,27 +451,35 @@ function AdminPlatformSettings() {
             </button>
           </form>
         </div>
-
       </div>
 
       {/* Bottom Section: Active Coupons List (Full width with responsive multi-column grid) */}
       <div className="space-y-8">
         <div className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-4">
           <h2 className="text-[10px] uppercase tracking-[0.3em] font-black opacity-40">Subsidized Promo Ledgers</h2>
-          <span className={`text-[8px] uppercase tracking-widest font-black px-2 py-0.5 border rounded-sm ${
-            isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-200 text-zinc-500"
-          }`}>
+          <span
+            className={`text-[8px] uppercase tracking-widest font-black px-2 py-0.5 border rounded-sm ${
+              isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-200 text-zinc-500"
+            }`}
+          >
             {promosList.length} Active Vouchers
           </span>
         </div>
 
         {promosList.length === 0 ? (
-          <div className={`py-20 text-center border-2 border-dashed rounded-lg transition-colors w-full ${
-            isDark ? "border-zinc-900 bg-zinc-950/10" : "border-zinc-200 bg-zinc-50/10"
-          }`}>
+          <div
+            className={`py-20 text-center border-2 border-dashed rounded-lg transition-colors w-full ${
+              isDark ? "border-zinc-900 bg-zinc-950/10" : "border-zinc-200 bg-zinc-50/10"
+            }`}
+          >
             <div className="flex justify-center mb-4 opacity-20">
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+                />
               </svg>
             </div>
             <p className="text-sm font-serif italic opacity-40">No promo codes registered.</p>
@@ -486,9 +495,7 @@ function AdminPlatformSettings() {
                 <div
                   key={promo.id}
                   className={`p-6 border rounded-lg transition-all duration-300 hover:shadow-lg relative overflow-hidden flex flex-col justify-between ${
-                    isDark 
-                      ? "border-zinc-900 bg-zinc-950/40 hover:border-zinc-850" 
-                      : "border-zinc-200 bg-white hover:border-zinc-350"
+                    isDark ? "border-zinc-900 bg-zinc-950/40 hover:border-zinc-850" : "border-zinc-200 bg-white hover:border-zinc-350"
                   }`}
                 >
                   <div className="flex justify-between items-start gap-4">
@@ -496,24 +503,28 @@ function AdminPlatformSettings() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-3 flex-wrap">
                         {/* Coupon Code Dashed Style */}
-                        <span className={`px-3 py-1.5 border-2 border-dashed font-mono font-black text-lg tracking-wider rounded-sm ${
-                          isExhausted
-                            ? "opacity-30 border-zinc-500 text-zinc-500"
-                            : isDark
-                              ? "border-zinc-700 bg-zinc-900/40 text-zinc-100"
-                              : "border-zinc-300 bg-zinc-50/50 text-zinc-900"
-                        }`}>
+                        <span
+                          className={`px-3 py-1.5 border-2 border-dashed font-mono font-black text-lg tracking-wider rounded-sm ${
+                            isExhausted
+                              ? "opacity-30 border-zinc-500 text-zinc-500"
+                              : isDark
+                                ? "border-zinc-700 bg-zinc-900/40 text-zinc-100"
+                                : "border-zinc-300 bg-zinc-50/50 text-zinc-900"
+                          }`}
+                        >
                           {promo.code}
                         </span>
-                        
+
                         {/* Discount Value Badge */}
-                        <span className={`text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-sm border ${
-                          isExhausted
-                            ? "border-zinc-500/25 text-zinc-500 bg-zinc-500/5"
+                        <span
+                          className={`text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-sm border ${
+                            isExhausted
+                              ? "border-zinc-500/25 text-zinc-500 bg-zinc-500/5"
                               : isDark
                                 ? "border-emerald-900/50 text-emerald-400 bg-emerald-950/10"
                                 : "border-emerald-200 text-emerald-800 bg-emerald-50"
-                        }`}>
+                          }`}
+                        >
                           {promo.type === "percentage" ? `${promo.value}% Off` : `-${formatRupiah(promo.value)}`}
                         </span>
                       </div>
@@ -546,20 +557,14 @@ function AdminPlatformSettings() {
                       <div className="w-full">
                         <div className="flex justify-between items-center text-[9px] uppercase tracking-widest font-black mb-1.5 opacity-50">
                           <span>Redeemed limit</span>
-                          <span>{promo.used_count} / {promo.max_uses}</span>
+                          <span>
+                            {promo.used_count} / {promo.max_uses}
+                          </span>
                         </div>
                         <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? "bg-zinc-900" : "bg-zinc-100"}`}>
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${
-                              isExhausted
-                                ? "bg-rose-500/40"
-                                : percentUsed >= 90
-                                  ? "bg-rose-500"
-                                  : percentUsed >= 70
-                                    ? "bg-amber-500"
-                                    : isDark
-                                      ? "bg-zinc-100"
-                                      : "bg-zinc-900"
+                              isExhausted ? "bg-rose-500/40" : percentUsed >= 90 ? "bg-rose-500" : percentUsed >= 70 ? "bg-amber-500" : isDark ? "bg-zinc-100" : "bg-zinc-900"
                             }`}
                             style={{ width: `${Math.min(percentUsed, 100)}%` }}
                           />
@@ -567,10 +572,12 @@ function AdminPlatformSettings() {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between text-[9px] uppercase font-bold tracking-wider opacity-50">
-                        <span>Redeemed: <span className="font-mono">{promo.used_count} times</span></span>
-                        <span className={`px-1.5 py-0.5 rounded-sm border ${
-                          isDark ? "border-zinc-800 bg-zinc-900/40 text-zinc-400" : "border-zinc-200 bg-zinc-50 text-zinc-505"
-                        }`}>Unlimited Uses</span>
+                        <span>
+                          Redeemed: <span className="font-mono">{promo.used_count} times</span>
+                        </span>
+                        <span className={`px-1.5 py-0.5 rounded-sm border ${isDark ? "border-zinc-800 bg-zinc-900/40 text-zinc-400" : "border-zinc-200 bg-zinc-50 text-zinc-505"}`}>
+                          Unlimited Uses
+                        </span>
                       </div>
                     )}
                   </div>

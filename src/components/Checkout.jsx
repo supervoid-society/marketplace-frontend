@@ -89,7 +89,7 @@ function Checkout() {
       } else if (fee_type === "fixed") {
         platformFee += fee_fixed;
       } else if (fee_type === "both") {
-        platformFee += (itemAmount * (fee_percentage / 100)) + fee_fixed;
+        platformFee += itemAmount * (fee_percentage / 100) + fee_fixed;
       }
     }
 
@@ -197,8 +197,8 @@ function Checkout() {
     try {
       let isPromoApplied = false;
       for (const item of cart) {
-        const shouldApplyPromo = appliedPromo && (!isPromoApplied || appliedPromo?.type === 'percentage');
-        
+        const shouldApplyPromo = appliedPromo && (!isPromoApplied || appliedPromo?.type === "percentage");
+
         const checkoutRes = await fetch(`${CRUD_URL}/transactions/checkout`, {
           method: "POST",
           headers: {
@@ -233,6 +233,18 @@ function Checkout() {
 
         if (!transferRes.ok) {
           const errData = await transferRes.json();
+          try {
+            await fetch(`${CRUD_URL}/transactions/cancel`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ transactionId }),
+            });
+          } catch (cancelErr) {
+            console.error("Failed to cancel transaction:", cancelErr);
+          }
           throw new Error(errData.error || `Transfer failed for ${item.name}`);
         }
 
@@ -399,7 +411,9 @@ function Checkout() {
                   <span className={isDark ? "text-zinc-600" : "text-zinc-400"}>Current Balance</span>
                   <span className={finalTotal > balance ? "text-rose-500" : ""}>{formatRupiah(balance)}</span>
                 </div>
-                {finalTotal > balance && <p className="text-center text-[10px] uppercase tracking-widest font-black text-rose-500 mt-4">Insufficient funds for this transaction.</p>}
+                {finalTotal > balance && (
+                  <p className="text-center text-[10px] uppercase tracking-widest font-black text-rose-500 mt-4">Insufficient funds for this transaction.</p>
+                )}
               </div>
             </div>
 
