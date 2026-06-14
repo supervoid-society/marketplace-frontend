@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCart } from "../contexts/CartContext";
@@ -7,15 +7,74 @@ import Swal from "sweetalert2";
 
 function Cart() {
   const { isDark } = useTheme();
-  const { cart, updateCartItem, clearCart } = useCart();
+  const {
+    cart,
+    updateCartItem,
+    clearCart,
+    appliedPromo,
+    setAppliedPromo,
+    platformFee,
+    discountAmount,
+    finalTotal,
+    subtotal,
+  } = useCart();
   const [stockCache, setStockCache] = useState({});
   const [lastStockFetch, setLastStockFetch] = useState({});
+  const [promoCode, setPromoCode] = useState(appliedPromo ? appliedPromo.code : "");
+  const [promoError, setPromoError] = useState("");
+
+  useEffect(() => {
+    if (!appliedPromo) {
+      setPromoCode("");
+    } else {
+      setPromoCode(appliedPromo.code);
+    }
+  }, [appliedPromo]);
 
   const formatRupiah = (angka) => {
-    return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return "Rp " + Number(angka).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const handleValidatePromo = async () => {
+    if (!promoCode) return;
+    setPromoError("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${CRUD_URL}/admin-features/promos/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: promoCode }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setAppliedPromo(data);
+        Swal.fire({
+          icon: "success",
+          title: "Promo Applied",
+          text: `Kode promo ${data.code} berhasil dipasang!`,
+          timer: 1500,
+          showConfirmButton: false,
+          background: isDark ? "#09090b" : "#fff",
+          color: isDark ? "#fff" : "#000",
+        });
+      } else {
+        setAppliedPromo(null);
+        setPromoError(data.error || "Invalid promo code.");
+      }
+    } catch (error) {
+      setPromoError("Failed to validate promo code.");
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+    setPromoError("");
+  };
 
   const updateQuantity = async (cartItemId, catalogItemId, quantity) => {
     if (quantity <= 0) {
@@ -128,18 +187,79 @@ function Cart() {
               <h3 className="text-xs uppercase tracking-[0.3em] font-black mb-8">Summary</h3>
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-baseline">
-                  <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Subtotal</span>
-                  <span className="font-medium">{formatRupiah(total)}</span>
+                  <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-650" : "text-zinc-400"}`}>Subtotal</span>
+                  <span className="font-medium">{formatRupiah(subtotal)}</span>
                 </div>
+                {platformFee > 0 && (
+                  <div className="flex justify-between items-baseline">
+                    <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-650" : "text-zinc-400"}`}>Platform Fee</span>
+                    <span className="font-medium">{formatRupiah(platformFee)}</span>
+                  </div>
+                )}
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-baseline text-emerald-500">
+                    <span className="text-[10px] uppercase tracking-widest font-bold">Discount ({appliedPromo?.code})</span>
+                    <span className="font-medium">- {formatRupiah(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-baseline">
-                  <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Shipping</span>
+                  <span className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? "text-zinc-650" : "text-zinc-400"}`}>Shipping</span>
                   <span className="text-[10px] uppercase tracking-widest font-bold">Complimentary</span>
                 </div>
               </div>
+
+              {/* Promo Code Input Block */}
+              <div className="my-6 pt-6 border-t border-dashed border-zinc-200 dark:border-zinc-800">
+                <label className="block text-[8px] uppercase tracking-widest font-black opacity-60 mb-2">Promo Code</label>
+                <div className="flex gap-4">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => {
+                      setPromoCode(e.target.value);
+                      setPromoError("");
+                    }}
+                    disabled={appliedPromo}
+                    placeholder="Enter code (e.g. DISCOUNT10)"
+                    className="flex-1 bg-transparent border-b focus:outline-none uppercase tracking-wider font-mono text-xs py-1"
+                  />
+                  {appliedPromo ? (
+                    <button
+                      type="button"
+                      onClick={handleRemovePromo}
+                      className="px-3 py-1 border border-rose-500/20 text-rose-500 text-[9px] uppercase font-black hover:bg-rose-500/10 cursor-pointer transition-all"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleValidatePromo}
+                      disabled={!promoCode}
+                      className={`px-4 py-1 border text-[9px] uppercase font-black cursor-pointer transition-all ${
+                        promoCode
+                          ? isDark
+                            ? "bg-zinc-100 border-zinc-100 text-zinc-900 hover:bg-transparent hover:text-zinc-100"
+                            : "bg-zinc-900 border-zinc-900 text-white hover:bg-transparent hover:text-zinc-900"
+                          : "border-zinc-200 text-zinc-300 cursor-not-allowed"
+                      }`}
+                    >
+                      Apply
+                    </button>
+                  )}
+                </div>
+                {promoError && <p className="text-[9px] font-bold text-rose-500 mt-2">{promoError}</p>}
+                {appliedPromo && (
+                  <p className="text-[9px] font-bold text-emerald-500 mt-2">
+                    Promo applied: {appliedPromo.type === "percentage" ? `${appliedPromo.value}%` : formatRupiah(appliedPromo.value)} discount.
+                  </p>
+                )}
+              </div>
+
               <div className={`h-px w-full mb-6 ${isDark ? "bg-zinc-800" : "bg-zinc-200"}`}></div>
               <div className="flex justify-between items-end mb-12">
                 <span className="text-xs uppercase tracking-widest font-black">Total</span>
-                <span className="text-3xl font-black tracking-tighter">{formatRupiah(total)}</span>
+                <span className="text-3xl font-black tracking-tighter">{formatRupiah(finalTotal)}</span>
               </div>
               <div className="space-y-3">
                 <Link

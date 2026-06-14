@@ -13,17 +13,38 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [platformSettings, setPlatformSettings] = useState(null);
 
   const getAuthToken = () => localStorage.getItem("token");
 
-  // Load cart when component mounts or token changes
+  const fetchPlatformSettings = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+      const res = await fetch(`${CRUD_URL}/admin-features/platform-settings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPlatformSettings(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch platform settings:", error);
+    }
+  };
+
+  // Load cart and platform settings when component mounts or token changes
   useEffect(() => {
     const token = getAuthToken();
     const userRole = getUserRole();
     if (token && userRole === "buyer") {
       fetchCart();
+      fetchPlatformSettings();
     } else {
       setCart([]);
+      setAppliedPromo(null);
+      setPlatformSettings(null);
     }
   }, []);
 
@@ -34,8 +55,11 @@ export const CartProvider = ({ children }) => {
       const userRole = getUserRole();
       if (token && userRole === "buyer") {
         fetchCart();
+        fetchPlatformSettings();
       } else {
         setCart([]);
+        setAppliedPromo(null);
+        setPlatformSettings(null);
       }
     };
 
@@ -164,6 +188,7 @@ export const CartProvider = ({ children }) => {
 
     if (response.ok) {
       setCart([]);
+      setAppliedPromo(null);
     } else {
       const error = await response.json();
       throw new Error(error.error || "Failed to clear cart");
@@ -191,8 +216,44 @@ export const CartProvider = ({ children }) => {
 
     // Clear cart after successful checkout
     setCart([]);
+    setAppliedPromo(null);
     return await response.json();
   };
+
+  // Calculations
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  let platformFee = 0;
+  let discountAmount = 0;
+
+  cart.forEach((item, index) => {
+    const itemAmount = item.price * item.quantity;
+    if (platformSettings) {
+      const { fee_type, fee_percentage, fee_fixed } = platformSettings;
+      if (fee_type === "percentage") {
+        platformFee += itemAmount * (fee_percentage / 100);
+      } else if (fee_type === "fixed") {
+        platformFee += fee_fixed;
+      } else if (fee_type === "both") {
+        platformFee += itemAmount * (fee_percentage / 100) + fee_fixed;
+      }
+    }
+
+    if (appliedPromo) {
+      const { type, value } = appliedPromo;
+      if (type === "percentage") {
+        discountAmount += itemAmount * (value / 100);
+      } else if (type === "fixed" && index === 0) {
+        discountAmount += Math.min(value, itemAmount);
+      }
+    }
+  });
+
+  if (appliedPromo && appliedPromo.type === "percentage") {
+    discountAmount = Math.min(discountAmount, subtotal);
+  }
+
+  const finalTotal = subtotal + platformFee - discountAmount;
 
   const value = {
     cart,
@@ -202,6 +263,13 @@ export const CartProvider = ({ children }) => {
     clearCart,
     checkout,
     refreshCart: fetchCart,
+    appliedPromo,
+    setAppliedPromo,
+    platformSettings,
+    platformFee,
+    discountAmount,
+    finalTotal,
+    subtotal,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

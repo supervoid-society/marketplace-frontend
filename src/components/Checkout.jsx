@@ -9,16 +9,20 @@ import Swal from "sweetalert2";
 function Checkout() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const { cart, clearCart } = useCart();
+  const {
+    cart,
+    clearCart,
+    appliedPromo,
+    platformFee,
+    discountAmount,
+    finalTotal,
+    subtotal
+  } = useCart();
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState("");
   const [progress, setProgress] = useState(0);
-  const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState(null);
-  const [promoError, setPromoError] = useState("");
-  const [platformSettings, setPlatformSettings] = useState(null);
 
   const formatRupiah = (angka) => {
     return "Rp " + Number(angka).toLocaleString("id-ID");
@@ -55,101 +59,11 @@ function Checkout() {
       }
     };
 
-    const fetchPlatformSettings = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${CRUD_URL}/admin-features/platform-settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setPlatformSettings(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch platform settings:", error);
-      }
-    };
-
     fetchBalance();
-    fetchPlatformSettings();
     setLoading(false);
   }, [cart]);
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  let platformFee = 0;
-  let discountAmount = 0;
-
-  cart.forEach((item, index) => {
-    const itemAmount = item.price * item.quantity;
-    if (platformSettings) {
-      const { fee_type, fee_percentage, fee_fixed } = platformSettings;
-      if (fee_type === "percentage") {
-        platformFee += itemAmount * (fee_percentage / 100);
-      } else if (fee_type === "fixed") {
-        platformFee += fee_fixed;
-      } else if (fee_type === "both") {
-        platformFee += itemAmount * (fee_percentage / 100) + fee_fixed;
-      }
-    }
-
-    if (appliedPromo) {
-      const { type, value } = appliedPromo;
-      if (type === "percentage") {
-        discountAmount += itemAmount * (value / 100);
-      } else if (type === "fixed" && index === 0) {
-        discountAmount += Math.min(value, itemAmount);
-      }
-    }
-  });
-
-  if (appliedPromo && appliedPromo.type === "percentage") {
-    discountAmount = Math.min(discountAmount, total);
-  }
-
-  const finalTotal = total + platformFee - discountAmount;
   const canCheckout = cart.length > 0 && finalTotal <= balance;
-
-  const handleValidatePromo = async () => {
-    if (!promoCode) return;
-    setPromoError("");
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${CRUD_URL}/admin-features/promos/validate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code: promoCode }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setAppliedPromo(data);
-        Swal.fire({
-          icon: "success",
-          title: "Promo Applied",
-          text: `Kode promo ${data.code} berhasil dipasang!`,
-          timer: 1500,
-          showConfirmButton: false,
-          background: isDark ? "#09090b" : "#fff",
-          color: isDark ? "#fff" : "#000",
-        });
-      } else {
-        setAppliedPromo(null);
-        setPromoError(data.error || "Invalid promo code.");
-      }
-    } catch (error) {
-      setPromoError("Failed to validate promo code.");
-    }
-  };
-
-  const handleRemovePromo = () => {
-    setAppliedPromo(null);
-    setPromoCode("");
-    setPromoError("");
-  };
 
   const handlePayment = async () => {
     const user = getUserFromToken();
@@ -338,58 +252,10 @@ function Checkout() {
                 ))}
               </div>
 
-              {/* Promo Code Input Block */}
-              <div className="my-8 pt-8 border-t border-dashed border-zinc-200 dark:border-zinc-800">
-                <label className="block text-[8px] uppercase tracking-widest font-black opacity-60 mb-2">Promo Code</label>
-                <div className="flex gap-4">
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => {
-                      setPromoCode(e.target.value);
-                      setPromoError("");
-                    }}
-                    disabled={appliedPromo}
-                    placeholder="Enter code (e.g. DISCOUNT10)"
-                    className="flex-1 bg-transparent border-b focus:outline-none uppercase tracking-wider font-mono text-sm py-2"
-                  />
-                  {appliedPromo ? (
-                    <button
-                      type="button"
-                      onClick={handleRemovePromo}
-                      className="px-4 py-2 border border-rose-500/20 text-rose-500 text-[10px] uppercase font-black hover:bg-rose-500/10 cursor-pointer transition-all"
-                    >
-                      Remove
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleValidatePromo}
-                      disabled={!promoCode}
-                      className={`px-6 py-2 border text-[10px] uppercase font-black cursor-pointer transition-all ${
-                        promoCode
-                          ? isDark
-                            ? "bg-zinc-100 border-zinc-100 text-zinc-900 hover:bg-transparent hover:text-zinc-100"
-                            : "bg-zinc-900 border-zinc-900 text-white hover:bg-transparent hover:text-zinc-900"
-                          : "border-zinc-200 text-zinc-300 cursor-not-allowed"
-                      }`}
-                    >
-                      Apply
-                    </button>
-                  )}
-                </div>
-                {promoError && <p className="text-[10px] font-bold text-rose-500 mt-2">{promoError}</p>}
-                {appliedPromo && (
-                  <p className="text-[10px] font-bold text-emerald-500 mt-2">
-                    Promo applied: {appliedPromo.type === "percentage" ? `${appliedPromo.value}%` : formatRupiah(appliedPromo.value)} discount.
-                  </p>
-                )}
-              </div>
-
               <div className="border-t border-zinc-200 dark:border-zinc-800 pt-8 space-y-4">
                 <div className="flex flex-wrap justify-between items-center text-[10px] uppercase tracking-widest font-bold gap-2">
                   <span className={isDark ? "text-zinc-650" : "text-zinc-400"}>Subtotal</span>
-                  <span className="break-all">{formatRupiah(total)}</span>
+                  <span className="break-all">{formatRupiah(subtotal)}</span>
                 </div>
                 {platformFee > 0 && (
                   <div className="flex flex-wrap justify-between items-center text-[10px] uppercase tracking-widest font-bold gap-2">

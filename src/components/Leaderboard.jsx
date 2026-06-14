@@ -73,7 +73,7 @@ function Leaderboard() {
 
                   <div className="col-span-6 md:col-span-5 flex items-center gap-3 md:gap-4">
                     <img
-                      src={`${AUTH_URL}/users/profile-image/${user.user_id}?v=${Date.now()}`}
+                      src={`${AUTH_URL}/users/profile-image/${user.user_id}?role=buyer&v=${Date.now()}`}
                       alt={user.display_name || user.username || "Participant"}
                       className="w-8 h-8 md:w-12 md:h-12 rounded-full object-cover bg-zinc-200 dark:bg-zinc-800"
                       onError={(e) => {
