@@ -109,7 +109,7 @@ function SellerPage() {
           </div>
         ) : (
           catalog.map((item) => (
-            <div key={item.id} className="group flex flex-col">
+            <div key={item.id} className="group flex flex-col h-full">
               <div className={`relative overflow-hidden mb-6 border ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
                 {item.image_id ? (
                   <img
@@ -125,9 +125,12 @@ function SellerPage() {
               </div>
               <h3 className="text-xl font-serif tracking-tight mb-1">{item.name}</h3>
               <p className="text-lg font-medium tracking-tighter mb-4">{formatRupiah(item.price)}</p>
+
+              {item.description && <p className={`text-xs mb-6 line-clamp-3 ${isDark ? "text-zinc-500" : "text-zinc-400"} leading-relaxed`}>{item.description}</p>}
+
               <Link
                 to={`/catalog/${item.id}`}
-                className={`py-4 px-6 rounded-none text-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+                className={`mt-auto py-4 px-6 rounded-none text-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
               >
                 View Details
               </Link>

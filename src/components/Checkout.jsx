@@ -12,6 +12,9 @@ function Checkout() {
   const { cart, clearCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingMessage, setProcessingMessage] = useState("");
+  const [progress, setProgress] = useState(0);
 
   const formatRupiah = (angka) => {
     return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -74,6 +77,30 @@ function Checkout() {
       return;
     }
 
+    // Start simulation screen
+    setIsProcessing(true);
+    setProgress(0);
+    setProcessingMessage("Establishing secure connection...");
+
+    const steps = [
+      { time: 1000, progress: 25, message: "Validating secure signatures..." },
+      { time: 2200, progress: 50, message: "Authorizing transfer amount..." },
+      { time: 3500, progress: 75, message: "Exchanging ledger tokens..." },
+      { time: 4500, progress: 95, message: "Finalizing acquisition records..." },
+    ];
+
+    steps.forEach((step) => {
+      setTimeout(() => {
+        setProgress(step.progress);
+        setProcessingMessage(step.message);
+      }, step.time);
+    });
+
+    // Wait exactly 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    setProgress(100);
+    setProcessingMessage("Payment Authorized.");
+
     try {
       for (const item of cart) {
         const checkoutRes = await fetch(`${CRUD_URL}/transactions/checkout`, {
@@ -107,28 +134,46 @@ function Checkout() {
         if (!transferRes.ok) throw new Error(`Transfer failed for ${item.name}`);
       }
     } catch (error) {
+      setIsProcessing(false);
       Swal.fire({ icon: "error", title: "Payment Failed", text: error.message });
       return;
     }
-
-    // Generate professional receipt
-    generateReceipt({
-      items: cart.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      total,
-      buyerName: user.name || user.username || undefined,
-    });
-
     await clearCart();
     window.dispatchEvent(new CustomEvent("balanceChanged"));
+    setIsProcessing(false);
     Swal.fire({ icon: "success", title: "Purchase Complete" });
-    navigate("/catalog");
+    navigate("/transaction-history");
   };
 
   if (loading) return null;
+
+  if (isProcessing) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
+        <div className="relative mb-12">
+          {/* Outer elegant spinning line */}
+          <div
+            className={`w-24 h-24 rounded-full border-t-2 border-r border-b ${isDark ? "border-t-zinc-100 border-zinc-900" : "border-t-zinc-900 border-zinc-100"} animate-spin`}
+          ></div>
+          {/* Inner elegant reverse spinning line */}
+          <div
+            className={`absolute top-2 left-2 w-20 h-20 rounded-full border-b-2 border-l border-t ${isDark ? "border-b-zinc-400 border-zinc-900" : "border-b-zinc-600 border-zinc-100"} animate-spin [animation-duration:1.5s] [animation-direction:reverse]`}
+          ></div>
+        </div>
+
+        <h2 className="text-3xl font-serif italic mb-3 animate-pulse">Processing Acquirement</h2>
+        <div className="h-6 overflow-hidden mb-6">
+          <p key={processingMessage} className={`text-[10px] uppercase tracking-[0.3em] font-black ${isDark ? "text-zinc-400" : "text-zinc-500"} animate-fade-in`}>
+            {processingMessage}
+          </p>
+        </div>
+
+        <div className={`w-48 h-[1px] ${isDark ? "bg-zinc-900" : "bg-zinc-100"} overflow-hidden relative`}>
+          <div className={`absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300 ease-out`} style={{ width: `${progress}%` }}></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 px-4 md:px-6 max-w-2xl mx-auto">

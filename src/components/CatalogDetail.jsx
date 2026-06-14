@@ -13,6 +13,7 @@ function CatalogDetail() {
   const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [notification, setNotification] = useState(null);
 
   const token = localStorage.getItem("token");
   const payload = token ? JSON.parse(atob(token.split(".")[1])) : null;
@@ -52,8 +53,23 @@ function CatalogDetail() {
   const handleAddToCart = async () => {
     try {
       await addToCart(item, parseInt(quantity));
+      setNotification({
+        type: "success",
+        message: `${quantity}x ${item.name} successfully added to your bag.`,
+      });
+      // Auto-dismiss after 6 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 6000);
     } catch (error) {
       console.error("Error adding to cart:", error);
+      setNotification({
+        type: "error",
+        message: error.message || "Failed to add item to cart.",
+      });
+      setTimeout(() => {
+        setNotification(null);
+      }, 6000);
     }
   };
 
@@ -193,6 +209,55 @@ function CatalogDetail() {
       <div className={`mt-20 pt-20 border-t ${isDark ? "border-zinc-900" : "border-zinc-100"}`}>
         <Review itemId={id} />
       </div>
+
+      {notification && (
+        <div
+          className={`fixed bottom-8 right-8 z-50 flex items-center justify-between gap-6 p-5 rounded-none border backdrop-blur-md shadow-2xl transition-all duration-300 transform translate-y-0 ${
+            isDark ? "bg-zinc-950/95 border-zinc-800 text-zinc-100" : "bg-white/95 border-zinc-200 text-zinc-900"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {notification.type === "success" ? (
+              <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            )}
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black mb-1">{notification.type === "success" ? "Added to Cart" : "Error"}</p>
+              <p className="text-sm font-medium pr-4">{notification.message}</p>
+            </div>
+          </div>
+
+          <div className={`flex items-center gap-4 border-l pl-4 ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
+            {notification.type === "success" && (
+              <Link
+                to="/cart"
+                className={`text-[9px] uppercase tracking-[0.15em] font-black py-2 px-4 border ${
+                  isDark
+                    ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100"
+                    : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"
+                } transition-all duration-300`}
+              >
+                View Cart
+              </Link>
+            )}
+            <button onClick={() => setNotification(null)} className="opacity-40 hover:opacity-100 transition-opacity p-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

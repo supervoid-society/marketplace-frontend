@@ -82,7 +82,7 @@ function PublicCatalog() {
           </div>
         ) : (
           catalog.map((item) => (
-            <div key={item.id} className="group flex flex-col">
+            <div key={item.id} className="group flex flex-col h-full">
               {item.image_id ? (
                 <div className={`relative overflow-hidden mb-6 border ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
                   <img
@@ -102,7 +102,7 @@ function PublicCatalog() {
                 <p className="text-xl font-medium tracking-tighter">{formatRupiah(item.price)}</p>
               </div>
 
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-4 mb-4">
                 {sellers[item.user_id] && (
                   <Link
                     to={`/seller/${item.user_id}`}
@@ -116,9 +116,11 @@ function PublicCatalog() {
                 </span>
               </div>
 
+              {item.description && <p className={`text-xs mb-6 line-clamp-3 ${isDark ? "text-zinc-500" : "text-zinc-400"} leading-relaxed`}>{item.description}</p>}
+
               <Link
                 to={`/catalog/${item.id}`}
-                className={`py-4 px-6 rounded-none text-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
+                className={`mt-auto py-4 px-6 rounded-none text-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all duration-300 border ${isDark ? "bg-zinc-100 text-zinc-900 border-zinc-100 hover:bg-transparent hover:text-zinc-100" : "bg-zinc-900 text-white border-zinc-900 hover:bg-transparent hover:text-zinc-900"}`}
               >
                 View Details
               </Link>
